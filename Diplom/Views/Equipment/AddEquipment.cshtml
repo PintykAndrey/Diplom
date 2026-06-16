@@ -1,0 +1,265 @@
+@model List<Diplom.Models.EquipmentModel>
+@inject Microsoft.AspNetCore.Mvc.Localization.IViewLocalizer Localizer
+
+@{
+    int newIndex = Model?.Count ?? 0;
+}
+
+<link href="~/css/fields.css" rel="stylesheet" />
+
+<h2 class="mb-3">@Localizer["Equipment"]</h2>
+
+<form asp-controller="Equipment" asp-action="SaveEquipment" method="post" enctype="multipart/form-data">
+
+    <table class="table table-bordered table-sm text-center align-middle">
+
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>@Localizer["Name"]</th>
+                <th>@Localizer["Type"]</th>
+                <th>@Localizer["Year"]</th>
+                <th>@Localizer["Working Hours"]</th>
+                <th>@Localizer["Operator"]</th>
+                <th>@Localizer["Photo"]</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @for (int i = 0; i < Model.Count; i++)
+            {
+                <tr>
+                    <td>@(i + 1)</td>
+
+                    <input type="hidden" name="models[@i].Id" value="@Model[i].Id" />
+
+                    <td>
+                        <input name="models[@i].Name" value="@Model[i].Name" class="form-control" required />
+                    </td>
+
+                    <td>
+                        <select name="models[@i].Type" class="form-control" required>
+                            <option value="1" selected="@(Model[i].Type == EquipmentType.Tractor)">@Localizer["Tractor"]
+                            </option>
+                            <option value="2" selected="@(Model[i].Type == EquipmentType.Combine)">@Localizer["Combine"]
+                            </option>
+                            <option value="3" selected="@(Model[i].Type == EquipmentType.Implement)">@Localizer["Implement"]
+                            </option>
+                        </select>
+                    </td>
+
+                    <td>
+                        <input name="models[@i].Year" value="@Model[i].Year" class="form-control" required />
+                    </td>
+
+                    <td>
+                        <input name="models[@i].WorkingHours" value="@Model[i].WorkingHours" class="form-control"
+                            required />
+                    </td>
+
+                    <td>
+                        <select name="models[@i].Operator" class="form-control" required>
+                            <option value="">@Localizer["Select"]</option>
+                            @foreach (var op in ViewBag.Operators)
+                            {
+                                var displayName = $"{op.FirstName} {op.LastName}";
+                                <option value="@displayName" selected="@(displayName == Model[i].Operator)">@displayName
+                                </option>
+                            }
+                        </select>
+                    </td>
+
+                    <td>
+                        <div class="photo-section" data-index="@i">
+                            <div class="existing-photos">
+                                @if (Model[i].PhotoPaths != null)
+                                {
+                                    foreach (var photo in Model[i].PhotoPaths)
+                                    {
+                                        <div class="photo-item existing-photo" data-photo-path="@photo">
+                                            <img src="@photo" class="photo-thumbnail" />
+                                            <button type="button" class="btn-remove-photo">✖</button>
+                                        </div>
+                                    }
+                                }
+                            </div>
+                            <div class="new-photos-preview"></div>
+
+                            <input type="file" name="models[@i].PhotoUploads" multiple class="photo-input" />
+
+                            <button type="button" class="btn-add-photo btn btn-outline-primary btn-sm w-100">
+                                @Localizer["Add Photo"]
+                            </button>
+
+                            <div class="photo-paths-hidden"></div>
+                            <div class="photos-to-delete-hidden"></div>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+
+        <tfoot>
+            <tr class="new-equipment-row">
+                <td>+</td>
+
+                <td><input name="models[@newIndex].Name" class="form-control new-equipment-required new-equipment-trigger" /></td>
+
+                <td>
+                    <select name="models[@newIndex].Type" class="form-control new-equipment-required">
+                        <option value="1">@Localizer["Tractor"]</option>
+                        <option value="2">@Localizer["Combine"]</option>
+                        <option value="3">@Localizer["Implement"]</option>
+                    </select>
+                </td>
+
+                <td><input name="models[@newIndex].Year" class="form-control new-equipment-required new-equipment-trigger" /></td>
+
+                <td><input name="models[@newIndex].WorkingHours" class="form-control new-equipment-required new-equipment-trigger" /></td>
+
+                <td>
+                    <select name="models[@newIndex].Operator" class="form-control new-equipment-required new-equipment-trigger">
+                        <option value="">@Localizer["Select"]</option>
+                        @foreach (var op in ViewBag.Operators)
+                        {
+                            var displayName = $"{op.FirstName} {op.LastName}";
+                            <option value="@displayName">@displayName</option>
+                        }
+                    </select>
+                </td>
+
+                <td>
+                    <div class="photo-section" data-index="@newIndex">
+
+                        <div class="new-photos-preview"></div>
+
+                        <input type="file" name="models[@newIndex].PhotoUploads" multiple class="photo-input new-equipment-trigger" />
+
+                        <button type="button" class="btn-add-photo btn btn-outline-primary btn-sm w-100">
+                            @Localizer["Add Photo"]
+                        </button>
+
+                        <div class="photo-paths-hidden"></div>
+                        <div class="photos-to-delete-hidden"></div>
+                    </div>
+                </td>
+            </tr>
+        </tfoot>
+
+    </table>
+
+    <div class="d-flex justify-content-end">
+        <button class="btn btn-primary">@Localizer["Save"]</button>
+    </div>
+</form>
+
+<script>
+    document.querySelectorAll('.photo-section').forEach(section => {
+        initializePhotoSection(section);
+    });
+
+    function initializePhotoSection(section) {
+        const index = section.dataset.index;
+        const photoInput = section.querySelector('.photo-input');
+        const addPhotoBtn = section.querySelector('.btn-add-photo');
+        const newPhotosPreview = section.querySelector('.new-photos-preview');
+        const photoPathsHidden = section.querySelector('.photo-paths-hidden');
+        const photosToDeleteHidden = section.querySelector('.photos-to-delete-hidden');
+
+        addPhotoBtn.addEventListener('click', () => photoInput.click());
+
+        photoInput.addEventListener('change', function (e) {
+            Array.from(e.target.files).forEach(file => {
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = function (ev) {
+                        const div = document.createElement('div');
+                        div.className = 'photo-item new-photo';
+                        div.innerHTML = `
+                            <img src="${ev.target.result}" class="photo-thumbnail"/>
+                            <button type="button" class="btn-remove-photo">✖</button>
+                        `;
+                        newPhotosPreview.appendChild(div);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        });
+
+        section.addEventListener('click', function (e) {
+            if (e.target.classList.contains('btn-remove-photo')) {
+
+                const item = e.target.closest('.photo-item');
+                const isExisting = item.classList.contains('existing-photo');
+
+                if (isExisting) {
+                    const path = item.dataset.photoPath;
+
+                    item.remove();
+
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = `models[${index}].PhotosToDelete`;
+                    input.value = path;
+                    photosToDeleteHidden.appendChild(input);
+                } else {
+                    item.remove();
+                }
+
+                updateHiddenInputs(section, index);
+            }
+        });
+
+        updateHiddenInputs(section, index);
+    }
+
+    function updateHiddenInputs(section, index) {
+        const container = section.querySelector('.photo-paths-hidden');
+        const existing = section.querySelectorAll('.existing-photo');
+
+        container.innerHTML = '';
+
+        existing.forEach(photo => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = `models[${index}].PhotoPaths`;
+            input.value = photo.dataset.photoPath;
+            container.appendChild(input);
+        });
+    }
+
+    const newEquipmentRow = document.querySelector('.new-equipment-row');
+
+    if (newEquipmentRow) {
+        const requiredFields = newEquipmentRow.querySelectorAll('.new-equipment-required');
+        const triggerFields = newEquipmentRow.querySelectorAll('.new-equipment-trigger');
+
+        function updateNewEquipmentRequiredFields() {
+            const hasAnyValue = Array.from(triggerFields).some(field => {
+                if (field.type === 'file') {
+                    return field.files.length > 0;
+                }
+
+                return field.value.trim() !== '';
+            });
+
+            requiredFields.forEach(field => {
+                field.required = hasAnyValue;
+            });
+        }
+
+        triggerFields.forEach(field => {
+            field.addEventListener('input', updateNewEquipmentRequiredFields);
+            field.addEventListener('change', updateNewEquipmentRequiredFields);
+        });
+
+        updateNewEquipmentRequiredFields();
+    }
+
+    document.querySelector('form').addEventListener('submit', function () {
+        document.querySelectorAll('.photo-section').forEach(section => {
+            const index = section.dataset.index;
+            updateHiddenInputs(section, index);
+        });
+    });
+</script>

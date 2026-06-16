@@ -1,0 +1,196 @@
+﻿@model List<Diplom.Models.Warehouses.MaterialLogModel>
+
+@inject Microsoft.AspNetCore.Mvc.Localization.IViewLocalizer Localizer
+
+
+
+@{
+
+    ViewData["Title"] = @Localizer["Pesticides"].Value;
+
+    int newIndex = Model.Count;
+
+}
+
+
+
+<h2 class="text-center">@Localizer["Pesticides"]</h2>
+
+
+
+<form asp-action="Save" asp-controller="Warehouses" method="post">
+
+    <input type="hidden" name="category" value="Pesticides" />
+
+
+
+    <table class="table table-bordered text-center">
+
+        <thead>
+
+            <tr>
+
+                <th>@Localizer["No."]</th>
+
+                <th>@Localizer["Date"]</th>
+
+                <th>@Localizer["Type"]</th>
+
+                <th>@Localizer["Name"]</th>
+
+                <th>@Localizer["Unit"]</th>
+
+                <th>@Localizer["Quantity"]</th>
+
+                <th>@Localizer["Price"]</th>
+
+                <th>@Localizer["Sum"]</th>
+
+            </tr>
+
+        </thead>
+
+
+
+        <tbody>
+
+            @for (int i = 0; i < Model.Count; i++)
+
+            {
+
+                <tr>
+
+                    <td>@(i + 1)</td>
+
+
+
+                    <td>
+
+                        @Model[i].Date.ToLocalTime().ToString("dd.MM.yyyy")
+
+                        <input type="hidden" name="models[@i].Id" value="@Model[i].Id" />
+
+                    </td>
+
+
+
+                    <td>
+
+                        <select name="models[@i].TypeId" class="form-select form-select-sm" required>
+
+                            <option value="">-- @Localizer["Select Type"] --</option>
+
+                            @foreach (var type in ViewBag.PesticideTypes)
+
+                            {
+
+                                <option value="@type.Id" selected="@(Model[i].TypeId == type.Id)">@Localizer[type.Name]</option>
+
+                            }
+
+                        </select>
+
+                    </td>
+
+
+
+                    <td><input name="models[@i].Name" value="@Model[i].Name" class="form-control" required /></td>
+
+                    <td>
+
+                        <select name="models[@i].Unit" class="form-select" required>
+
+                            <option value="kg" selected="@(Model[i].Unit == "kg")">@Localizer["kg"]</option>
+
+                            <option value="l" selected="@(Model[i].Unit == "l")">@Localizer["l"]</option>
+
+                        </select>
+
+                    </td>
+
+                    <td><input type="text" inputmode="decimal" pattern="[0-9]+([\.,][0-9]+)?" name="models[@i].Quantity" value="@Model[i].Quantity"
+                            class="form-control" required /></td>
+
+                    <td><input type="text" inputmode="decimal" pattern="[0-9]+([\.,][0-9]+)?" name="models[@i].Price" value="@Model[i].Price" class="form-control"
+                            required /></td>
+
+
+
+                    <td>@(Model[i].Sum?.ToString("0.00"))</td>
+
+                </tr>
+
+            }
+
+        </tbody>
+
+
+
+        <tfoot>
+
+            <tr>
+
+                <td>+</td>
+
+                <td>@DateTime.Now.ToString("dd.MM.yyyy")</td>
+
+
+
+                <td>
+
+                    <select name="models[@newIndex].TypeId" class="form-select form-select-sm">
+
+                        <option value="">-- @Localizer["Select Type"] --</option>
+
+                        @foreach (var type in ViewBag.PesticideTypes)
+
+                        {
+
+                            <option value="@type.Id">@Localizer[type.Name]</option>
+
+                        }
+
+                    </select>
+
+                </td>
+
+                <td><input name="models[@newIndex].Name" class="form-control" /></td>
+
+                <td>
+
+                    <select name="models[@newIndex].Unit" class="form-select" required>
+
+                        <option value="kg">@Localizer["kg"]</option>
+
+                        <option value="l">@Localizer["l"]</option>
+
+                    </select>
+
+                </td>
+
+                <td><input type="text" inputmode="decimal" pattern="[0-9]+([\.,][0-9]+)?" name="models[@newIndex].Quantity" class="form-control" />
+                </td>
+
+                <td><input type="text" inputmode="decimal" pattern="[0-9]+([\.,][0-9]+)?" name="models[@newIndex].Price" class="form-control" /></td>
+
+                <td>—</td>
+
+            </tr>
+
+        </tfoot>
+
+    </table>
+
+
+
+    <div class="form-actions">
+
+        <button type="submit" class="btn btn-primary btn-save">@Localizer["Save"]</button>
+
+    </div>
+
+
+
+</form>
+
+

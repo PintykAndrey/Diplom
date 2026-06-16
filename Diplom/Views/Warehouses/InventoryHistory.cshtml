@@ -1,0 +1,160 @@
+﻿@model List<Diplom.Models.Warehouses.InventoryHistoryModel>
+@inject Microsoft.AspNetCore.Mvc.Localization.IViewLocalizer Localizer
+
+@{
+    ViewData["Title"] = Localizer["Inventory History"];
+    var selectedTypes = ViewBag.SelectedTypes as List<string>;
+}
+
+<link href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" rel="stylesheet" />
+
+<div class="container-fluid mt-4">
+
+    <h2 class="mb-3 text-center">@Localizer["Inventory History"]</h2>
+
+    <form method="get" asp-controller="Warehouses" asp-action="InventoryHistory" class="mb-3">
+
+        <label class="me-2"><b>@Localizer["Filter"]:</b></label>
+
+        <input type="checkbox" name="types" value="Pesticides" @(selectedTypes != null &&
+            selectedTypes.Contains("Pesticides") ? "checked" : "") />
+        @Localizer["Pesticides"]
+
+        <input type="checkbox" name="types" value="Fertilizers" @(selectedTypes != null &&
+            selectedTypes.Contains("Fertilizers") ? "checked" : "") />
+        @Localizer["Fertilizers"]
+
+        <input type="checkbox" name="types" value="Seeds" @(selectedTypes != null && selectedTypes.Contains("Seeds") ?
+            "checked" : "") />
+        @Localizer["Seeds"]
+
+        <input type="checkbox" name="types" value="Fuel" @(selectedTypes != null && selectedTypes.Contains("Fuel") ?
+            "checked" : "") />
+        @Localizer["Fuel"]
+
+        <input type="checkbox" name="types" value="Lubricants" @(selectedTypes != null &&
+            selectedTypes.Contains("Lubricants") ? "checked" : "") />
+        @Localizer["Lubricants"]
+
+        <input type="checkbox" name="types" value="SpareParts" @(selectedTypes != null &&
+            selectedTypes.Contains("SpareParts") ? "checked" : "") />
+        @Localizer["Spare Parts"]
+
+        <input type="text" id="dateRange" class="form-control d-inline-block ms-3 w-250px"
+            placeholder="@Localizer["Select date range"]"
+            value="@(ViewBag.DateFrom != null && ViewBag.DateTo != null ? ViewBag.DateFrom + " to " + ViewBag.DateTo : "")" />
+
+        <input type="hidden" name="dateFrom" id="dateFrom" value="@ViewBag.DateFrom" />
+        <input type="hidden" name="dateTo" id="dateTo" value="@ViewBag.DateTo" />
+
+        <button type="submit" class="btn btn-secondary btn-sm ms-2">
+            @Localizer["Apply"]
+        </button>
+
+        <a asp-controller="Warehouses" asp-action="InventoryHistory" class="btn btn-outline-secondary btn-sm">
+            @Localizer["All"]
+        </a>
+
+    </form>
+
+    <table class="table table-bordered table-sm text-center align-middle">
+
+        <thead class="table-light">
+            <tr>
+                <th>#</th>
+                <th>@Localizer["Date"]</th>
+                <th>@Localizer["Name"]</th>
+                <th>@Localizer["Type"]</th>
+                <th>@Localizer["Unit"]</th>
+                <th>@Localizer["Change"]</th>
+                <th>@Localizer["Price"]</th>
+                <th>@Localizer["Total"]</th>
+                <th>@Localizer["Balance"]</th>
+                <th>@Localizer["Notes"]</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @if (Model != null && Model.Any())
+            {
+                for (int i = 0; i < Model.Count; i++)
+                {
+                    var item = Model[i];
+
+                    <tr>
+                        <td>@(i + 1)</td>
+                        <td>@item.ChangeDate.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
+                        <td>@item.Name</td>
+                        <td>@item.Type</td>
+                        <td>@item.Unit</td>
+
+                        <td>
+                            @if (item.QuantityChange > 0)
+                            {
+                                <span class="text-success">+@item.QuantityChange</span>
+                            }
+                            else
+                            {
+                                <span class="text-danger">@item.QuantityChange</span>
+                            }
+                        </td>
+
+                        <td>@item.Price</td>
+                        <td>@item.Total</td>
+                        <td>@item.Balance</td>
+                        <td>@item.Notes</td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="10">@Localizer["No data"]</td>
+                </tr>
+            }
+        </tbody>
+
+    </table>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+
+        function formatLocalDate(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        flatpickr("#dateRange", {
+            mode: "range",
+            dateFormat: "Y-m-d",
+
+            defaultDate: [
+                document.getElementById("dateFrom").value || null,
+                document.getElementById("dateTo").value || null
+            ],
+
+            onClose: function (selectedDates) {
+                const fromInput = document.getElementById("dateFrom");
+                const toInput = document.getElementById("dateTo");
+
+                if (selectedDates.length > 0) {
+                    fromInput.value = formatLocalDate(selectedDates[0]);
+
+                    if (selectedDates.length > 1) {
+                        toInput.value = formatLocalDate(selectedDates[1]);
+                    } else {
+                        toInput.value = formatLocalDate(selectedDates[0]);
+                    }
+                } else {
+                    fromInput.value = "";
+                    toInput.value = "";
+                }
+            }
+        });
+    });
+</script>

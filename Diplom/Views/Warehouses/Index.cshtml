@@ -1,0 +1,87 @@
+﻿@inject Microsoft.AspNetCore.Mvc.Localization.IViewLocalizer Localizer
+@using Diplom.Models.ViewModels
+
+@{
+    ViewData["Title"] = @Localizer["Warehouses"].Value;
+}
+
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="text-gradient">@Localizer["Warehouses Management"]</h2>
+            <p class="text-muted mb-0">@Localizer["Choose a warehouse section to manage inventory"]</p>
+        </div>
+    </div>
+
+    <div class="row">
+
+
+        <partial name="_SectionCard" model='new SectionCardModel {
+            Icon = "bi-clock-history",
+            Title = @Localizer["Inventory History"].Value,
+            Description = @Localizer["View historical inventory data and trends"].Value,
+            Url = @Url.Action("InventoryHistory", "Warehouses"),
+            ButtonText = @Localizer["Inventory History"].Value,
+            Color = "info"
+        }' />
+    </div>
+
+    <div class="row">
+        <partial name="_SectionCard" model='new SectionCardModel {
+            Icon = "bi-tools",
+            Title = @Localizer["Spare Parts"].Value,
+            Description = @Localizer["Manage spare parts inventory and availability"].Value,
+            Url = @Url.Action("SpareParts", "Warehouses"),
+            ButtonText = @Localizer["Spare Parts"].Value,
+            Color = "success"
+        }' />
+    </div>
+
+    <div class="row">
+        <partial name="_SectionCard" model='new SectionCardModel {
+            Icon = "bi-shield-exclamation",
+            Title = @Localizer["Pesticides"].Value,
+            Description = @Localizer["Manage pesticides and herbicides inventory"].Value,
+            Url = @Url.Action("Pesticides", "Warehouses"),
+            ButtonText = @Localizer["Pesticides"].Value,
+            Color = "danger"
+        }' />
+
+        <partial name="_SectionCard" model='new SectionCardModel {
+            Icon = "bi-box-seam",
+            Title = @Localizer["Fertilizers"].Value,
+            Description = @Localizer["Manage fertilizers and soil amendments"].Value,
+            Url = @Url.Action("Fertilizers", "Warehouses"),
+            ButtonText = @Localizer["Fertilizers"].Value,
+            Color = "success"
+        }' />
+
+        <partial name="_SectionCard" model='new SectionCardModel {
+            Icon = "bi-flower1",
+            Title = @Localizer["Seeds"].Value,
+            Description = @Localizer["Manage seeds inventory and planting schedules"].Value,
+            Url = @Url.Action("Seeds", "Warehouses"),
+            ButtonText = @Localizer["Seeds"].Value,
+            Color = "info"
+        }' />
+
+        <partial name="_SectionCard" model='new SectionCardModel {
+            Icon = "bi-fuel-pump",
+            Title = @Localizer["Fuel"].Value,
+            Description = @Localizer["Manage fuel inventory"].Value,
+            Url = @Url.Action("Fuel", "Warehouses"),
+            ButtonText = @Localizer["Fuel"].Value,
+            Color = "warning"
+        }' />
+
+        <partial name="_SectionCard" model='new SectionCardModel {
+            Icon = "bi-droplet",
+            Title = @Localizer["Lubricants"].Value,
+            Description = @Localizer["Manage oil and lubricants inventory"].Value,
+            Url = @Url.Action("Lubricants", "Warehouses"),
+            ButtonText = @Localizer["Lubricants"].Value,
+            Color = "info"
+        }' />
+    </div>
+</div>
+

@@ -1,0 +1,45 @@
+@model Diplom.Models.ViewModels.RegisterViewModel
+@inject Microsoft.AspNetCore.Mvc.Localization.IViewLocalizer Localizer
+
+@{
+    ViewData["Title"] = Localizer["Register"];
+}
+
+<div class="container mt-4" style="max-width: 480px;">
+    <h2>@Localizer["Register"]</h2>
+
+    <form asp-action="Register" method="post">
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+        <div class="mb-3">
+            <label asp-for="UserName" class="form-label">@Localizer["User Name"]</label>
+            <input asp-for="UserName" class="form-control" />
+            <span asp-validation-for="UserName" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Email" class="form-label">@Localizer["Email"]</label>
+            <input asp-for="Email" class="form-control" />
+            <span asp-validation-for="Email" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Password" class="form-label">@Localizer["Password"]</label>
+            <input asp-for="Password" class="form-control" />
+            <span asp-validation-for="Password" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="ConfirmPassword" class="form-label">@Localizer["Confirm Password"]</label>
+            <input asp-for="ConfirmPassword" class="form-control" />
+            <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100">@Localizer["Register"]</button>
+    </form>
+
+    <div class="text-center mt-3">
+        <span class="text-muted">@Localizer["Already have an account?"]</span>
+        <a asp-controller="Account" asp-action="Login">@Localizer["Login"]</a>
+    </div>
+</div>

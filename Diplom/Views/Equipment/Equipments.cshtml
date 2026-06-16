@@ -1,0 +1,153 @@
+@model List<Diplom.Models.EquipmentModel>
+@inject Microsoft.AspNetCore.Mvc.Localization.IViewLocalizer Localizer
+
+@{
+    var selectedType = ViewBag.Type as Diplom.Models.EquipmentType?;
+    var selectedEquipment = ViewBag.SelectedEquipment as Diplom.Models.EquipmentModel;
+
+    var journals = ViewBag.Journals as List<Diplom.Models.EquipmentJournalModel>;
+    var materialLookup = ViewBag.MaterialLookup as Dictionary<int, Diplom.Models.Warehouses.MaterialLogModel>
+    ?? new Dictionary<int, Diplom.Models.Warehouses.MaterialLogModel>();
+}
+
+
+<div class="container-fluid">
+
+    <div class="mb-3">
+        <a class="btn btn-outline-primary" href="?type=1">🚜 @Localizer["Tractor"]</a>
+
+        <a class="btn btn-outline-success" href="?type=2">🌾 @Localizer["Combine"]</a>
+
+        <a class="btn btn-outline-warning" href="?type=3">🔧 @Localizer["Implement"]</a>
+
+        <a class="btn btn-secondary" href="/">@Localizer["Reset"]</a>
+    </div>
+
+    <div class="row">
+
+        <div class="col-md-3 border-end">
+
+            <h5>@Localizer["Equipment"]</h5>
+
+            <ul class="list-group">
+                @foreach (var eq in Model)
+                {
+                    <a class="list-group-item list-group-item-action" href="?type=@((int)eq.Type)&id=@eq.Id">
+                        @eq.Name
+                    </a>
+                }
+            </ul>
+
+        </div>
+
+        <div class="col-md-9">
+
+            @if (selectedEquipment != null)
+            {
+                <div class="card mb-3">
+
+                    <div class="card-body">
+
+                        @if (selectedEquipment.PhotoPaths != null && selectedEquipment.PhotoPaths.Any())
+                        {
+                            <img src="@selectedEquipment.PhotoPaths.First()"
+                                class="equipment-main-photo" />
+                        }
+                        else
+                        {
+                            <p>@Localizer["No photo"]</p>
+                        }
+
+                        <div class="mt-2 d-flex gap-2 flex-wrap">
+                            @if (selectedEquipment.PhotoPaths != null)
+                            {
+                                foreach (var img in selectedEquipment.PhotoPaths.Skip(1))
+                                {
+                                    <img src="@img" class="equipment-thumb-photo" />
+                                }
+                            }
+                        </div>
+
+                    </div>
+                </div>
+
+                <table class="table table-bordered">
+                    <tr>
+                        <th>@Localizer["Name"]</th>
+                        <td>@selectedEquipment.Name</td>
+                    </tr>
+                    <tr>
+                        <th>@Localizer["Type"]</th>
+                        <td>@selectedEquipment.Type</td>
+                    </tr>
+                    <tr>
+                        <th>@Localizer["Year"]</th>
+                        <td>@selectedEquipment.Year</td>
+                    </tr>
+                    <tr>
+                        <th>@Localizer["Operator"]</th>
+                        <td>@selectedEquipment.Operator</td>
+                    </tr>
+                    <tr>
+                        <th>@Localizer["Working Hours"]</th>
+                        <td>@selectedEquipment.WorkingHours</td>
+                    </tr>
+                </table>
+
+                <h5>@Localizer["Work Journal"]</h5>
+
+                <table class="table table-sm table-bordered text-center">
+
+                    <thead>
+                        <tr>
+                            <th>@Localizer["Date"]</th>
+                            <th>@Localizer["Work Type"]</th>
+                            <th>@Localizer["Materials"]</th>
+                            <th>@Localizer["Working Hours"]</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @if (journals != null)
+                        {
+                            foreach (var j in journals.Where(x => x.EquipmentId == selectedEquipment.Id))
+                            {
+                                <tr>
+                                    <td>@j.Date?.ToString("yyyy-MM-dd")</td>
+                                    <td>@j.WorkType</td>
+                                    <td>
+                                        @{
+                                            var materialParts = (j.JournalMaterials ?? new
+                                            List<Diplom.Models.EquipmentJournalModel.EquipmentJournalMaterialModel>())
+                                            .Where(x => x.ArchivedAt == null && x.MaterialId.HasValue)
+                                            .Select(x =>
+                                            {
+                                                var mat = materialLookup.TryGetValue(x.MaterialId!.Value, out var value) ? value : null;
+                                                var name = mat?.Name ?? x.MaterialId.Value.ToString();
+                                                var unit = mat?.Unit ?? string.Empty;
+                                                var qty = x.Quantity.HasValue ?
+                                                            x.Quantity.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : string.Empty;
+                                                return string.IsNullOrWhiteSpace(qty) ? name : $"{name} {qty} {unit}".Trim();
+                                            })
+                                            .ToList();
+                                        }
+                                        @(materialParts.Any() ? string.Join(", ", materialParts) : j.Materials)
+                                    </td>
+                                    <td>@j.WorkingHours</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+
+                </table>
+            }
+            else
+            {
+                <div class="alert alert-info">
+                    @Localizer["Select equipment on the left"]
+                </div>
+            }
+
+        </div>
+    </div>
+</div>

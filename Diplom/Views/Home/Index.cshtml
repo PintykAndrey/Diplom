@@ -1,0 +1,394 @@
+@inject Microsoft.AspNetCore.Mvc.Localization.IViewLocalizer Localizer
+@using Diplom.Models.ViewModels
+
+@{
+    ViewData["Title"] = @Localizer["Dashboard"].Value;
+    var canViewFields = ViewBag.CanViewFields as bool? ?? true;
+    var canViewWarehouses = ViewBag.CanViewWarehouses as bool? ?? true;
+    var canViewEquipment = ViewBag.CanViewEquipment as bool? ?? true;
+    var canViewTools = ViewBag.CanViewTools as bool? ?? true;
+}
+
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="text-gradient">@Localizer["Dashboard"]</h2>
+            <p class="text-muted mb-0">@Localizer["Welcome to Enterprise Management System"]</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card border-gradient h-100">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-tree"></i> @Localizer["Fields Management"]
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="stat-item text-center mb-3">
+                                <i class="bi bi-tree fs-1 text-success"></i>
+                                <h5 class="text-success mt-2" id="fieldsCount">-</h5>
+                                <small>@Localizer["Total Fields"]</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="stat-item text-center mb-3">
+                                <i class="bi bi-map fs-1 text-primary"></i>
+                                <h5 class="text-primary mt-2" id="totalArea">-</h5>
+                                <small>@Localizer["Total Area"] (@Localizer["ha"])</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="list-group list-group-flush">
+                        <a href="@Url.Action("Fields", "Navigation")" class="list-group-item list-group-item-action">
+                            <i class="bi bi-grid-3x3-gap text-success"></i> @Localizer["Fields Overview"]
+                        </a>
+                        <a href="@Url.Action("UploadKml", "Kml")" class="list-group-item list-group-item-action">
+                            <i class="bi bi-plus-circle text-success"></i> @Localizer["Add Fields"]
+                        </a>
+                        <a href="@Url.Action("FieldSituationLog", "Navigation")"
+                            class="list-group-item list-group-item-action">
+                            <i class="bi bi-clipboard-check text-info"></i> @Localizer["Field Situation Log"]
+                        </a>
+                        <a href="@Url.Action("CropRotation", "Navigation")"
+                            class="list-group-item list-group-item-action">
+                            <i class="bi bi-arrow-repeat text-warning"></i> @Localizer["Crop Rotation"]
+                        </a>
+                        <a href="@Url.Action("FieldWorkLogPlan", "Fields")"
+                            class="list-group-item list-group-item-action">
+                            <i class="bi bi-list-task text-primary"></i> @Localizer["Field Work Log"]
+                        </a>
+                        <a href="@Url.Action("FieldsJournal", "Navigation")"
+                            class="list-group-item list-group-item-action">
+                            <i class="bi bi-journal-text text-secondary"></i> @Localizer["Fields Journal"]
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="card border-gradient h-100">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-box-seam"></i> @Localizer["Warehouses Management"]
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="stat-item text-center mb-3">
+                                <i class="bi bi-box-seam fs-1 text-primary"></i>
+                                <h5 class="text-primary mt-2" id="inventoryCount">-</h5>
+                                <small>@Localizer["Total Items"]</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="list-group list-group-flush">
+                        <a href="@Url.Action("Index", "Warehouses")" class="list-group-item list-group-item-action">
+                            <i class="bi bi-grid-3x3-gap text-primary"></i> @Localizer["Warehouses Overview"]
+                        </a>
+                        <a href="@Url.Action("Pesticides", "Warehouses")"
+                            class="list-group-item list-group-item-action">
+                            <i class="bi bi-shield-exclamation text-danger"></i> @Localizer["Pesticides"]
+                        </a>
+                        <a href="@Url.Action("Fertilizers", "Warehouses")"
+                            class="list-group-item list-group-item-action">
+                            <i class="bi bi-box-seam text-success"></i> @Localizer["Fertilizers"]
+                        </a>
+                        <a href="@Url.Action("Seeds", "Warehouses")" class="list-group-item list-group-item-action">
+                            <i class="bi bi-flower1 text-info"></i> @Localizer["Seeds"]
+                        </a>
+                        <a href="@Url.Action("Fuel", "Warehouses")" class="list-group-item list-group-item-action">
+                            <i class="bi bi-fuel-pump text-warning"></i> @Localizer["Fuel"]
+                        </a>
+                        <a href="@Url.Action("Lubricants", "Warehouses")"
+                            class="list-group-item list-group-item-action">
+                            <i class="bi bi-droplet text-info"></i> @Localizer["Lubricants"]
+                        </a>
+                        <a href="@Url.Action("SpareParts", "Warehouses")"
+                            class="list-group-item list-group-item-action">
+                            <i class="bi bi-gear text-secondary"></i> @Localizer["Spare Parts"]
+                        </a>
+                        <a href="@Url.Action("InventoryHistory", "Warehouses")"
+                            class="list-group-item list-group-item-action">
+                            <i class="bi bi-clock-history text-info"></i> @Localizer["Inventory History"]
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card border-gradient h-100">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-truck"></i> @Localizer["Equipment Management"]
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="stat-item text-center mb-3">
+                                <i class="bi bi-truck fs-1 text-success"></i>
+                                <h5 class="text-success mt-2" id="equipmentCount">-</h5>
+                                <small>@Localizer["Total Equipment"]</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="stat-item text-center mb-3">
+                                <i class="bi bi-person fs-1 text-primary"></i>
+                                <h5 class="text-primary mt-2" id="operatorsCount">-</h5>
+                                <small>@Localizer["Operators"]</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="list-group list-group-flush">
+                        <a href="@Url.Action("Equipment", "Navigation")" class="list-group-item list-group-item-action">
+                            <i class="bi bi-grid-3x3-gap text-primary"></i> @Localizer["Equipment Overview"]
+                        </a>
+                        <a href="@Url.Action("Equipments", "Navigation")"
+                            class="list-group-item list-group-item-action">
+                            <i class="bi bi-list-task text-primary"></i> @Localizer["Equipments"]
+                        </a>
+                        <a href="@Url.Action("AddEquipment", "Equipment")"
+                            class="list-group-item list-group-item-action">
+                            <i class="bi bi-plus-circle text-primary"></i> @Localizer["Add Equipment"]
+                        </a>
+                        <a href="@Url.Action("EquipmentJournal", "Navigation")"
+                            class="list-group-item list-group-item-action">
+                            <i class="bi bi-journal-text text-secondary"></i> @Localizer["Equipment Journal"]
+                        </a>
+                        <a href="@Url.Action("Operators", "Navigation")" class="list-group-item list-group-item-action">
+                            <i class="bi bi-journal-text text-secondary"></i> @Localizer["Operators"]
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="card border-gradient h-100">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-tools"></i> @Localizer["Tools & Settings"]
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="stat-item text-center mb-3">
+                                <i class="bi bi-book fs-1 text-primary"></i>
+                                <h5 class="text-primary mt-2" id="operationsCount">-</h5>
+                                <small>@Localizer["Operations"]</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="stat-item text-center mb-3">
+                                <i class="bi bi-archive fs-1 text-danger"></i>
+                                <h5 class="text-danger mt-2" id="archivedCount">-</h5>
+                                <small>@Localizer["Archived Fields"]</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="list-group list-group-flush">
+                        <a href="@Url.Action("Tools", "Navigation")" class="list-group-item list-group-item-action">
+                            <i class="bi bi-grid-3x3-gap text-secondary"></i> @Localizer["Tools Overview"]
+                        </a>
+                        <a href="@Url.Action("Encyclopedia", "Tools")" class="list-group-item list-group-item-action">
+                            <i class="bi bi-book text-primary"></i> @Localizer["Encyclopedia"]
+                        </a>
+                        <a href="@Url.Action("Vocabulary", "Navigation")"
+                            class="list-group-item list-group-item-action">
+                            <i class="bi bi-translate text-success"></i> @Localizer["Dictionary"]
+                        </a>
+                        <a href="@Url.Action("Archive", "Navigation")" class="list-group-item list-group-item-action">
+                            <i class="bi bi-archive text-danger"></i> @Localizer["Archive"]
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card border-gradient">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">
+                        <i class="bi bi-lightning"></i> @Localizer["Quick Actions"]
+                    </h6>
+                    <button class="btn btn-sm btn-outline-primary" onclick="openQuickActionsModal()">
+                        <i class="bi bi-gear"></i>
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center" id="quickActionsContainer">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<partial name="_QuickActionsModal" />
+
+<script>
+    const dashboardVisibility = {
+        fields: @canViewFields.ToString().ToLowerInvariant(),
+        warehouses: @canViewWarehouses.ToString().ToLowerInvariant(),
+        equipment: @canViewEquipment.ToString().ToLowerInvariant(),
+        tools: @canViewTools.ToString().ToLowerInvariant()
+    };
+
+    function hideDashboardCardByTitle(titleText) {
+        document.querySelectorAll('.card-header h6').forEach(header => {
+            if (header.textContent.includes(titleText)) {
+                const cardColumn = header.closest('.col-md-6');
+                if (cardColumn) cardColumn.style.display = 'none';
+            }
+        });
+    }
+
+    let qaModal;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        if (!dashboardVisibility.fields) hideDashboardCardByTitle('Fields Management');
+        if (!dashboardVisibility.warehouses) hideDashboardCardByTitle('Warehouses Management');
+        if (!dashboardVisibility.equipment) hideDashboardCardByTitle('Equipment Management');
+        if (!dashboardVisibility.tools) hideDashboardCardByTitle('Tools & Settings');
+
+        qaModal = new bootstrap.Modal(document.getElementById('quickActionsModal'));
+        refreshQA();
+        loadDashboardStatistics();
+    });
+
+    async function refreshQA() {
+        const res = await fetch('/QuickActions/GetActions');
+        const actions = await res.json();
+
+        const container = document.getElementById('quickActionsContainer');
+        container.innerHTML = actions.filter(a => a.isEnabled || a.IsEnabled).map(a => `
+            <div class="col-md-2 col-6 mb-3">
+                <a href="${a.url || a.Url}" class="btn btn-${a.color || a.Color} btn-lg w-100 py-3 shadow-sm border-0">
+                    <i class="bi ${a.icon || a.Icon} fs-3 d-block mb-1"></i>
+                    <span class="small fw-bold">${a.name || a.Name}</span>
+                </a>
+            </div>
+        `).join('');
+
+        const list = document.getElementById('quickActionsSettingsList');
+        list.innerHTML = actions.length ? actions.map(a => {
+            const id = a.id || a.Id;
+            const isEnabled = a.isEnabled !== undefined ? a.isEnabled : a.IsEnabled;
+            const icon = a.icon || a.Icon;
+            const name = a.name || a.Name;
+            const color = a.color || a.Color;
+
+            return `
+                <div class="list-group-item d-flex justify-content-between align-items-center py-3 border-start-0 border-end-0">
+                    <div class="d-flex align-items-center flex-grow-1">
+                        <div class="form-check form-switch me-3">
+                            <input class="form-check-input" type="checkbox" id="qa-${id}" ${isEnabled ? 'checked' : ''} 
+                                   onchange="toggleQA(${id}, this.checked)">
+                        </div>
+                        <i class="bi ${icon} me-2 text-${color}"></i>
+                        <span class="fw-bold">${name}</span>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <input type="number" class="form-control form-control-sm me-3 w-60px" 
+                               value="${a.displayOrder || a.DisplayOrder || 0}" 
+                               onchange="updateOrder(${id}, this.value)">
+                        <button class="btn btn-link text-danger p-0" onclick="deleteQA(${id})">
+                            <i class="bi bi-trash-fill"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }).join('') : '<div class="p-4 text-center text-muted">No shortcuts yet.</div>';
+    }
+
+    async function addQA() {
+        const data = {
+            Name: document.getElementById('newActionName').value,
+            Icon: document.getElementById('newActionIcon').value,
+            Color: document.getElementById('newActionColor').value,
+            Url: document.getElementById('newActionUrl').value
+        };
+
+        if (!data.Name || !data.Url) {
+            const validationMessage = document.getElementById('quickActionValidationMessage');
+            if (validationMessage) validationMessage.classList.remove('d-none');
+            return;
+        }
+
+        const res = await fetch('/QuickActions/Create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+
+        if (res.ok) {
+            document.getElementById('addQuickActionForm').reset();
+            refreshQA();
+        }
+    }
+
+    async function toggleQA(id, enabled) {
+        const res = await fetch(`/QuickActions/Toggle?id=${id}&enabled=${enabled}`, {
+            method: 'POST'
+        });
+        refreshQA();
+    }
+
+    async function updateOrder(id, order) {
+        await fetch(`/QuickActions/UpdateOrder?id=${id}&order=${order}`, {
+            method: 'POST'
+        });
+        refreshQA();
+    }
+
+    async function deleteQA(id) {
+        await fetch(`/QuickActions/Delete?id=${id}`, { method: 'POST' });
+        refreshQA();
+    }
+
+    function openQuickActionsModal() {
+        qaModal.show();
+    }
+
+    function loadDashboardStatistics() {
+        const safeFetch = (url, elementId, processData) => {
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    return response.json();
+                })
+                .then(data => processData(data))
+                .catch(() => {
+                    const el = document.getElementById(elementId);
+                    if (el) el.textContent = '0';
+                });
+        };
+
+        safeFetch('/Home/GetDashboardStatistics', 'fieldsCount', data => {
+            document.getElementById('fieldsCount').textContent = data.totalFields || 0;
+            const areaEl = document.getElementById('totalArea');
+            if (areaEl) areaEl.textContent = (data.totalArea || 0).toFixed(2);
+            document.getElementById('operatorsCount').textContent = data.operators || 0;
+            document.getElementById('equipmentCount').textContent = data.equipment || 0;
+            document.getElementById('operationsCount').textContent = data.operations || 0;
+            document.getElementById('archivedCount').textContent = data.archivedFields || 0;
+            document.getElementById('inventoryCount').textContent = data.totalItems || 0;
+        });
+    }
+</script>

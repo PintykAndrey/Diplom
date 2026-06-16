@@ -1,0 +1,319 @@
+﻿@model Diplom.Models.Fields.FieldDetailsViewModel
+@inject Microsoft.AspNetCore.Mvc.Localization.IViewLocalizer Localizer
+
+@{
+    ViewData["Title"] = @Localizer["Field Card"].Value;
+}
+
+<link href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" rel="stylesheet" />
+<link href="~/css/fields.css" rel="stylesheet" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<div class="container-fluid mt-3">
+    <div class="row">
+
+        <div class="col-3 border-end">
+            <h5 class="mb-3">@Localizer["Field List"]</h5>
+            <ul class="list-group field-list">
+                @foreach (var field in Model.Fields)
+                {
+                    <li class="list-group-item field-item" onclick="loadField(@field.Id, this)">
+                        @field.Name
+                    </li>
+                }
+            </ul>
+        </div>
+
+        <div class="col-9">
+            <div class="row mb-3 align-items-center">
+                <div class="col-6 d-flex align-items-center">
+                    <input type="text" class="form-control form-control-sm me-2 w-200px" id="fieldNameInput"
+                        placeholder="@Localizer["Field Name"]" />
+                    <button class="btn btn-sm btn-success"
+                            id="saveFieldBtn"
+                            style="display:none;"
+                            onclick="saveField()">
+                        @Localizer["Save"]
+                    </button>
+
+                    <button class="btn btn-sm btn-danger ms-2"
+                            id="deleteFieldBtn"
+                            style="display:none;"
+                            data-bs-toggle="modal"
+                            data-bs-target="#deleteModal">
+                        @Localizer["Delete"]
+                    </button>
+                </div>
+                <div class="col-6 text-end">
+                    <div id="fieldMap" class="field-map-preview"></div>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-4">
+                    <label>@Localizer["Area"] (@Localizer["ha"])</label>
+                    <input type="number" step="0.01" class="form-control form-control-sm" id="fieldAreaInput" />
+                </div>
+                <div class="col-4">
+                    <label>@Localizer["Perimeter"] (@Localizer["m"])</label>
+                    <input type="number" step="0.01" class="form-control form-control-sm" id="fieldPerimeterInput" />
+                </div>
+            </div>
+
+            <hr />
+
+            <h5>@Localizer["Completed Operations"]</h5>
+            <div class="table-wrapper">
+                <table class="table table-bordered table-sm">
+                    <thead class="table-light">
+                        <tr>
+                            <th>№</th>
+                            <th>@Localizer["Operation Type"]</th>
+                            <th>@Localizer["Execution Date"]</th>
+                            <th>@Localizer["Material"]</th>
+                            <th>@Localizer["Rate (kg/ha)"]</th>
+                            <th>@Localizer["Aggregate"]</th>
+                        </tr>
+                    </thead>
+                    <tbody id="workLogTable"></tbody>
+                </table>
+            </div>
+
+            <hr />
+
+            <h5>@Localizer["Field Inspection Notes"]</h5>
+            <div class="table-wrapper">
+                <table class="table table-bordered table-sm">
+                    <thead class="table-light">
+                        <tr>
+                            <th>№</th>
+                            <th>@Localizer["Date"]</th>
+                            <th>@Localizer["Description"]</th>
+                            <th>@Localizer["Recommendations"]</th>
+                            <th>@Localizer["Photo"]</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inspectionTable"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">@Localizer["Delete Field"]</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                @Localizer["Are you sure you want to delete this field? This action cannot be undone."]
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    @Localizer["Cancel"]
+                </button>
+                <button type="button" class="btn btn-danger" onclick="deleteField()">
+                    @Localizer["Delete"]
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<form id="csrfForm" asp-controller="FieldsJournal" asp-action="FieldsJournal" method="post">
+    @Html.AntiForgeryToken()
+</form>
+
+<script>
+    let currentFieldId = null;
+    let currentMap = null;
+    let currentFieldLayer = null;
+
+    function loadField(fieldId, element) {
+        currentFieldId = fieldId;
+
+        document.querySelectorAll(".field-item").forEach(el => el.classList.remove("active"));
+        element.classList.add("active");
+
+        document.getElementById("deleteFieldBtn").style.display = "inline-block";
+        document.getElementById("saveFieldBtn").style.display = "inline-block";
+
+        fetch('/FieldsJournal/GetFieldData?id=' + fieldId)
+            .then(res => res.json())
+            .then(data => {
+
+                document.getElementById("fieldNameInput").value = data.field.name;
+                document.getElementById("fieldAreaInput").value = data.field.areaHectares;
+                document.getElementById("fieldPerimeterInput").value = data.field.perimeterMeters;
+
+                const mapDiv = document.getElementById("fieldMap");
+                mapDiv.style.display = "block";
+
+                if (!currentMap) {
+                    currentMap = L.map('fieldMap', { minZoom: 3, maxZoom: 18 }).setView([48.5, 31], 13);
+
+                    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                        attribution: 'Tiles Â© Esri'
+                    }).addTo(currentMap);
+                }
+
+                if (currentFieldLayer) {
+                    currentMap.removeLayer(currentFieldLayer);
+                }
+
+                fetch(`/FieldsJournal/GetFieldGeometry?id=${fieldId}`)
+                    .then(response => response.json())
+                    .then(geometryData => {
+                        if (geometryData && geometryData.coordinates) {
+                            const coordinates = geometryData.coordinates[0].map(coord => [coord[1], coord[0]]);
+
+                            currentFieldLayer = L.polygon(coordinates, {
+                                color: '#00ff00',
+                                weight: 3,
+                                opacity: 1.0,
+                                fillColor: '#00ff00',
+                                fillOpacity: 0.3
+                            }).addTo(currentMap);
+
+                            currentMap.fitBounds(currentFieldLayer.getBounds().pad(0.1));
+
+                            currentFieldLayer.bindPopup(`
+                                <strong>${data.field.name}</strong><br>
+                                @Localizer["Area"]: ${data.field.areaHectares} @Localizer["ha"]<br>
+                                @Localizer["Perimeter"]: ${data.field.perimeterMeters} @Localizer["m"]
+                            `);
+                        } else {
+                            currentMap.setView([48.5, 31], 6);
+                        }
+                    })
+                    .catch(() => {
+                        currentMap.setView([48.5, 31], 6);
+                    });
+
+                const workTable = document.getElementById("workLogTable");
+                workTable.innerHTML = "";
+                data.workLogs.forEach((item, index) => {
+                    const m = item.materials || {};
+                    const fertNames = (m.fertilizers || []).join("<br>");
+                    const pestNames = (m.pesticides || []).join("<br>");
+                    const fertRates = (m.fertilizerRates || []).join("<br>");
+                    const pestRates = (m.pesticideRates || []).join("<br>");
+
+                    const materialLines = [
+                        (m.grain ?? ""),
+                        fertNames,
+                        pestNames
+                    ].filter(x => x && x.trim().length > 0);
+
+                    const rateLines = [
+                        (m.grainRate ?? "")?.toString(),
+                        fertRates,
+                        pestRates
+                    ].filter(x => x && x.toString().trim().length > 0);
+
+                    workTable.innerHTML += `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>${item.operation ?? ""}</td>
+                            <td>${item.factFrom ?? ""} - ${item.factTo ?? ""}</td>
+                            <td>${materialLines.join("<br>")}</td>
+                            <td>${rateLines.join("<br>")}</td>
+                            <td>${item.aggregate ?? ""}</td>
+                        </tr>
+                    `;
+                });
+
+                const inspectTable = document.getElementById("inspectionTable");
+                inspectTable.innerHTML = "";
+                data.inspectionNotes.forEach((note, index) => {
+                    const photos = note.photos && note.photos.length > 0
+                        ? note.photos.map(p => `<img src="${p}" class="field-photo" onclick="openPhotoModal('${p}')" />`).join("")
+                        : "";
+                    inspectTable.innerHTML += `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>${note.date ?? ""}</td>
+                            <td>${note.description ?? ""}</td>
+                            <td>${note.recommendations ?? ""}</td>
+                            <td>${photos}</td>
+                        </tr>
+                    `;
+                });
+            });
+    }
+
+    function deleteField() {
+        if (!currentFieldId) return;
+
+        const token = document.querySelector('#csrfForm input[name="__RequestVerificationToken"]').value;
+
+        fetch('/FieldsJournal/DeleteField', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'RequestVerificationToken': token
+            },
+            body: `id=${currentFieldId}&__RequestVerificationToken=${token}`
+        })
+            .then(response => {
+                if (response.ok) {
+                    window.location.reload();
+                }
+            })
+            .catch(() => { });
+    }
+
+    function saveField() {
+        if (!currentFieldId) return;
+
+        const token = document.querySelector('#csrfForm input[name="__RequestVerificationToken"]').value;
+        const name = document.getElementById("fieldNameInput").value;
+        const areaHectares = document.getElementById("fieldAreaInput").value;
+        const perimeterMeters = document.getElementById("fieldPerimeterInput").value;
+
+        fetch('/FieldsJournal/SaveField', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'RequestVerificationToken': token
+            },
+            body: `id=${encodeURIComponent(currentFieldId)}&name=${encodeURIComponent(name)}&areaHectares=${encodeURIComponent(areaHectares)}&perimeterMeters=${encodeURIComponent(perimeterMeters)}&__RequestVerificationToken=${encodeURIComponent(token)}`
+        })
+            .then(response => {
+                if (response.ok) {
+                    const activeItem = document.querySelector(".field-item.active");
+                    if (activeItem) {
+                        activeItem.textContent = name;
+                    }
+                }
+            })
+            .catch(() => { });
+    }
+
+    function openPhotoModal(imageSrc) {
+        const modal = document.getElementById('photoModal');
+        const modalImage = document.getElementById('modalImage');
+        modalImage.src = imageSrc;
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closePhotoModal() {
+        const modal = document.getElementById('photoModal');
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+            closePhotoModal();
+        }
+    });
+</script>
+
+<div class="photo-modal" id="photoModal" onclick="closePhotoModal()">
+    <span class="photo-modal-close">&times;</span>
+    <img id="modalImage" src="" alt="Field photo" />
+</div>

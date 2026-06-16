@@ -1,0 +1,54 @@
+@inject Microsoft.AspNetCore.Mvc.Localization.IViewLocalizer Localizer
+@using Diplom.Models.ViewModels
+
+@{
+    ViewData["Title"] = @Localizer["Equipment"];
+}
+
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="text-gradient">@Localizer["Equipment Management"]</h2>
+            <p class="text-muted mb-0">@Localizer["Choose a section to manage equipment operations"]</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <partial name="_SectionCard" model='new SectionCardModel {
+            Icon = "bi-list-task",
+            Title = @Localizer["Equipments"].Value,
+            Description = @Localizer["View and manage all equipment in the system"].Value,
+            Url = @Url.Action("Equipments", "Navigation"),
+            ButtonText = @Localizer["Equipments"].Value,
+            Color = "primary"
+        }' />
+
+        <partial name="_SectionCard" model='new SectionCardModel {
+            Icon = "bi-plus-circle",
+            Title = @Localizer["Add Equipment"].Value,
+            Description = @Localizer["Add new equipment to the system with photos and details"].Value,
+            Url = @Url.Action("AddEquipment", "Equipment"),
+            ButtonText = @Localizer["Add Equipment"].Value,
+            Color = "success"
+        }' />
+
+        <partial name="_SectionCard" model='new SectionCardModel {
+            Icon = "bi-journal-text",
+            Title = @Localizer["Equipment Journal"].Value,
+            Description = @Localizer["Track equipment usage and maintenance logs"].Value,
+            Url = @Url.Action("EquipmentJournal", "Navigation"),
+            ButtonText = @Localizer["Journal"].Value,
+            Color = "info"
+        }' />
+
+        <partial name="_SectionCard" model='new SectionCardModel {
+            Icon = "bi-people",
+            Title = @Localizer["Operators"].Value,
+            Description = @Localizer["Manage operators and their assignments"].Value,
+            Url = @Url.Action("Operators", "Navigation"),
+            ButtonText = @Localizer["Operators"].Value,
+            Color = "warning"
+        }' />
+    </div>
+
+</div>

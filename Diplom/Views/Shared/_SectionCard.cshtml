@@ -1,0 +1,25 @@
+@inject Microsoft.AspNetCore.Mvc.Localization.IViewLocalizer Localizer
+@using Diplom.Models.ViewModels
+
+@model SectionCardModel
+
+@{
+    var borderClass = $"border-{Model.Color}";
+    var iconColor = $"text-{Model.Color}";
+    var btnClass = $"btn-{Model.Color}";
+}
+
+<div class="col-md-4 mb-4">
+    <div class="card h-100 @borderClass">
+        <div class="card-body text-center">
+            <div class="mb-3">
+                <i class="@Model.Icon @iconColor icon-xl"></i>
+            </div>
+            <h5 class="card-title">@Model.Title</h5>
+            <p class="card-text">@Model.Description</p>
+            <a href="@Model.Url" class="btn @btnClass">
+                <i class="bi bi-arrow-right"></i> @Model.ButtonText
+            </a>
+        </div>
+    </div>
+</div>

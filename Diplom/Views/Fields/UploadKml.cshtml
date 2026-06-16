@@ -1,0 +1,233 @@
+@model Diplom.Models.Fields.UploadKmlViewModel
+@inject Microsoft.AspNetCore.Mvc.Localization.IViewLocalizer Localizer
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@Localizer["Upload KML"]</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+        <style>
+        body {
+            background-color: #f4f6f9;
+        }
+
+        .field-item.active {
+            background-color: #2563eb;
+            color: white;
+        }
+
+        .field-list {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+        }
+
+        .save-all-btn {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h2>@Localizer["Loading a KML file"]</h2>
+
+        <div class="card p-4 mb-4">
+            <form asp-action="UploadKml" asp-controller="Kml" method="post" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <input type="file" name="file" accept=".kml" class="form-control" />
+                </div>
+                <button type="submit" class="btn btn-success">@Localizer["Upload File"]</button>
+            </form>
+        </div>
+
+        @if (Model?.Fields?.Any() == true)
+        {
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="list-group field-list">
+                        @for (int i = 0; i < Model.Fields.Count; i++)
+                        {
+                            <button type="button" class="list-group-item list-group-item-action field-item" onclick="selectField(@i, this)">
+                                @Model.Fields[i].Name
+                            </button>
+                        }
+                    </div>
+
+                    <button class="btn btn-primary save-all-btn" onclick="saveAllFields()">
+                        @Localizer["Save all fields to the database"]
+                    </button>
+                </div>
+
+                <div class="col-md-8">
+                    <div id="map" class="map-500"></div>
+                    <div class="mt-3 p-3 bg-light rounded shadow-sm">
+                        <div class="mb-2">
+                            <label>@Localizer["New Name:"]</label>
+                            <input type="text" id="newFieldName" class="form-control" />
+                        </div>
+                        <div class="mb-2">
+                            <label>@Localizer["Area"] (@Localizer["ha"]):</label>
+                            <input type="number" id="areaValue" class="form-control" step="0.01" />
+                        </div>
+                        <strong>@Localizer["Perimeter"]:</strong> <span id="perimeterValue">-</span> m<br /><br />
+                        <button class="btn btn-primary" onclick="saveFieldToDb()">
+                            @Localizer["Save"]
+                        </button>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        var map = L.map('map', { minZoom: 3, maxZoom: 18 }).setView([48.5, 31], 6);
+
+        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            attribution: 'Tiles © Esri'
+        }).addTo(map);
+
+        var polygons = {};
+        var selectedIndex = null;
+
+        function latLngToMeters(lat, lng) {
+            const R = 6378137;
+            const x = R * lng * Math.PI / 180;
+            const y = R * Math.log(Math.tan(Math.PI / 4 + lat * Math.PI / 360));
+            return [x, y];
+        }
+
+        @if (Model?.Fields?.Any() == true)
+        {
+            for (int i = 0; i < Model.Fields.Count; i++)
+            {
+                <text>
+                                var coords = '@Model.Fields[i].CoordinatesJson'.trim().split(' ').map(c => {
+                                    const parts = c.split(',');
+                                    return [parseFloat(parts[1]), parseFloat(parts[0])];
+                                });
+                                polygons[@i] = L.polygon(coords, { color: '#3388ff', fillOpacity: 0.4 }).addTo(map);
+                </text>
+            }
+        }
+
+        function selectField(index, element) {
+            selectedIndex = index;
+
+            for (const key in polygons) {
+                polygons[key].setStyle({ color: '#3388ff', fillOpacity: 0.4, weight: 2 });
+            }
+
+            polygons[index].setStyle({ color: 'red', fillOpacity: 0.7, weight: 4 });
+
+            document.querySelectorAll('.field-item').forEach(el => el.classList.remove('active'));
+            element.classList.add('active');
+
+            map.fitBounds(polygons[index].getBounds());
+            calculateMetrics(polygons[index]);
+
+            document.getElementById("newFieldName").value = element.innerText;
+        }
+
+        function calculateMetrics(polygon) {
+            let latlngs = polygon.getLatLngs()[0];
+
+            let perimeter = 0;
+            for (let i = 0; i < latlngs.length; i++) {
+                const p1 = latlngs[i];
+                const p2 = latlngs[(i + 1) % latlngs.length];
+                perimeter += map.distance(p1, p2);
+            }
+
+            const area = calculateArea(latlngs);
+
+            document.getElementById("perimeterValue").innerText = perimeter.toFixed(2);
+            document.getElementById("areaValue").value = (area / 10000).toFixed(2);
+        }
+
+        function calculateArea(latlngs) {
+            const R = 6378137;
+            let area = 0;
+
+            for (let i = 0; i < latlngs.length; i++) {
+                const p1 = latlngs[i];
+                const p2 = latlngs[(i + 1) % latlngs.length];
+
+                const lat1 = p1.lat * Math.PI / 180;
+                const lng1 = p1.lng * Math.PI / 180;
+                const lat2 = p2.lat * Math.PI / 180;
+                const lng2 = p2.lng * Math.PI / 180;
+
+                area += (lng2 - lng1) * (2 + Math.sin(lat1) + Math.sin(lat2));
+            }
+
+            area = Math.abs(area * R * R / 2);
+            return area;
+        }
+
+        function saveFieldToDb(index = selectedIndex) {
+            if (index === null) return;
+
+            const polygon = polygons[index];
+            let latlngs = polygon.getLatLngs()[0];
+
+            const area = parseFloat(document.getElementById("areaValue").value) || 0;
+            const perimeter = parseFloat(document.getElementById("perimeterValue").innerText) || 0;
+            const newName = document.getElementById("newFieldName").value || `@Localizer["Field"] ${index + 1}`;
+
+            const canvas = document.createElement("canvas");
+            const ctx = canvas.getContext("2d");
+            const size = 400;
+            canvas.width = canvas.height = size;
+
+            const bounds = polygon.getBounds();
+            const sw = bounds.getSouthWest();
+            const ne = bounds.getNorthEast();
+            const latDiff = ne.lat - sw.lat;
+            const lngDiff = ne.lng - sw.lng;
+
+            ctx.fillStyle = "white";
+            ctx.fillRect(0, 0, size, size);
+
+            ctx.beginPath();
+            latlngs.forEach((p, idx) => {
+                const x = ((p.lng - sw.lng) / lngDiff) * size;
+                const y = size - ((p.lat - sw.lat) / latDiff) * size;
+                idx === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+            });
+            ctx.closePath();
+            ctx.fillStyle = "#2e7d32";
+            ctx.fill();
+            ctx.strokeStyle = "#000";
+            ctx.stroke();
+
+            const geometry = {
+                type: "Polygon",
+                coordinates: [polygons[index].getLatLngs()[0].map(latlng => [latlng.lng, latlng.lat])]
+            };
+
+            return fetch('/Kml/SaveField', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({
+                    name: newName,
+                    areaHectares: area,
+                    perimeterMeters: perimeter,
+                    geometry: JSON.stringify(geometry)
+                })
+            });
+        }
+
+        async function saveAllFields() {
+            for (let i = 0; i < Object.keys(polygons).length; i++) {
+                selectField(i, document.querySelectorAll('.field-item')[i]);
+                await saveFieldToDb(i);
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,88 @@
+@using Microsoft.Extensions.Localization
+@using Diplom.Localization
+@inject IStringLocalizer<DbVocabularyStringLocalizer> Localizer
+
+@{
+    ViewData["Title"] = Localizer["Vocabulary"];
+    var languages = new[] { "en", "ru", "uk", "bg" };
+}
+
+<h2>@Localizer["Vocabulary"]</h2>
+
+<table class="table table-bordered" id="vocabularyTable">
+    <thead>
+        <tr>
+            <th>Key</th>
+            @foreach (var lang in languages)
+            {
+                <th>@lang.ToUpper()</th>
+            }
+        </tr>
+    </thead>
+    <tbody>
+        @if (Model != null && ((IEnumerable<dynamic>)Model).Any())
+        {
+            foreach (var item in Model)
+            {
+                if (string.IsNullOrEmpty(item.Key)) continue;
+
+                <tr data-key="@item.Key">
+                    <td>@item.Key</td>
+                    @foreach (var lang in languages)
+                    {
+                        string value = "";
+                        foreach (var t in item.Translations)
+                        {
+                            if (t.Language == lang)
+                            {
+                                value = t.Value ?? "";
+                                break;
+                            }
+                        }
+
+                        <td>
+                            <input type="text" class="form-control translation-input" data-language="@lang" value="@value" />
+                        </td>
+                    }
+                </tr>
+            }
+        }
+        else
+        {
+            <tr>
+                <td colspan="5">@Localizer["No data available"]</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<div class="text-end mt-3">
+    <button class="btn btn-primary" id="saveAllBtn">@Localizer["Save All"]</button>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('saveAllBtn').addEventListener('click', async () => {
+            const requests = [];
+            document.querySelectorAll('#vocabularyTable tbody tr').forEach(row => {
+                const key = row.dataset.key;
+                if (!key) return;
+                row.querySelectorAll('.translation-input').forEach(input => {
+                    const language = input.dataset.language;
+                    const value = input.value.trim();
+                    requests.push({ key, language, value });
+                });
+            });
+
+            if (!requests.length) return;
+
+            try {
+                await fetch('/Vocabulary/UpdateAjax', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(requests)
+                });
+            } catch { }
+        });
+    </script>
+}

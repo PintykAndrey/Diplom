@@ -1,0 +1,244 @@
+@inject Microsoft.AspNetCore.Mvc.Localization.IViewLocalizer Localizer
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+@inject Microsoft.AspNetCore.Identity.UserManager<Diplom.Models.Identity.ApplicationUser> UserManager
+@inject Diplom.Data.ApplicationDbContext DbContext
+@using Diplom.Models.Identity
+@using Microsoft.EntityFrameworkCore
+
+@{
+    var currentCulture = System.Globalization.CultureInfo.CurrentUICulture.Name;
+    var currentPath = Context.Request.Path;
+    var isAuthenticated = User.Identity?.IsAuthenticated == true;
+    var displayName = User.FindFirst("DisplayName")?.Value ?? User.Identity?.Name;
+    var currentUser = isAuthenticated ? await UserManager.GetUserAsync(User) : null;
+    var userTag = currentUser?.UserTag ?? User.FindFirst("UserTag")?.Value;
+    var sharedOwnerUserId = Context.Session.GetString("SharedOwnerUserId");
+    var currentReturnUrl = Context.Request.PathBase + Context.Request.Path + Context.Request.QueryString;
+    var sharedOwner = !string.IsNullOrWhiteSpace(sharedOwnerUserId) ? await UserManager.FindByIdAsync(sharedOwnerUserId) :
+    null;
+    var currentUserId = currentUser?.Id;
+    var sharedGrants = isAuthenticated && !string.IsNullOrWhiteSpace(currentUserId)
+    ? await DbContext.DataAccessGrants.Where(x => x.GranteeUserId == currentUserId).ToListAsync()
+    : new List<DataAccessGrant>();
+    var incomingFriendRequestsCount = isAuthenticated && !string.IsNullOrWhiteSpace(currentUserId)
+    ? await DbContext.FriendRequests.CountAsync(x => x.ReceiverUserId == currentUserId)
+    : 0;
+    var sharedOwnerIds = sharedGrants.Select(x => x.OwnerUserId).Distinct().ToList();
+    var sharedOwners = sharedOwnerIds.Any()
+    ? await DbContext.Users.Where(x => sharedOwnerIds.Contains(x.Id)).OrderBy(x => x.DisplayName).ToListAsync()
+    : new List<ApplicationUser>();
+    var activeOwnerId = sharedOwnerUserId ?? currentUserId;
+    var isSharedMode = !string.IsNullOrWhiteSpace(sharedOwnerUserId);
+    var canViewFields = !isSharedMode || sharedGrants.Any(x => x.OwnerUserId == activeOwnerId && x.Section ==
+    SharedDataSection.Fields);
+    var canViewWarehouses = !isSharedMode || sharedGrants.Any(x => x.OwnerUserId == activeOwnerId && x.Section ==
+    SharedDataSection.Warehouses);
+    var canViewEquipment = !isSharedMode || sharedGrants.Any(x => x.OwnerUserId == activeOwnerId && x.Section ==
+    SharedDataSection.Equipment);
+    var canViewTools = !isSharedMode || sharedGrants.Any(x => x.OwnerUserId == activeOwnerId && x.Section ==
+    SharedDataSection.Tools);
+    var canEditFields = !isSharedMode || sharedGrants.Any(x => x.OwnerUserId == activeOwnerId && x.Section == SharedDataSection.Fields && x.AccessLevel == DataAccessLevel.Edit);
+    var canEditWarehouses = !isSharedMode || sharedGrants.Any(x => x.OwnerUserId == activeOwnerId && x.Section == SharedDataSection.Warehouses && x.AccessLevel == DataAccessLevel.Edit);
+    var canEditEquipment = !isSharedMode || sharedGrants.Any(x => x.OwnerUserId == activeOwnerId && x.Section == SharedDataSection.Equipment && x.AccessLevel == DataAccessLevel.Edit);
+    var canEditTools = !isSharedMode || sharedGrants.Any(x => x.OwnerUserId == activeOwnerId && x.Section == SharedDataSection.Tools && x.AccessLevel == DataAccessLevel.Edit);
+    var pathText = currentPath.Value ?? string.Empty;
+    var currentSectionCanEdit = true;
+    if (pathText.Contains("Fields", StringComparison.OrdinalIgnoreCase))
+    {
+        currentSectionCanEdit = canEditFields;
+    }
+    else if (pathText.Contains("Warehouses", StringComparison.OrdinalIgnoreCase))
+    {
+        currentSectionCanEdit = canEditWarehouses;
+    }
+    else if (pathText.Contains("Equipment", StringComparison.OrdinalIgnoreCase))
+    {
+        currentSectionCanEdit = canEditEquipment;
+    }
+    else if (pathText.Contains("Tools", StringComparison.OrdinalIgnoreCase) || pathText.Contains("Archive", StringComparison.OrdinalIgnoreCase) || pathText.Contains("Encyclopedia", StringComparison.OrdinalIgnoreCase))
+    {
+        currentSectionCanEdit = canEditTools;
+    }
+    var contentWrapperClass = isAuthenticated ? "content-wrapper" : "auth-content-wrapper";
+    var friendRequestsBadgeClass = incomingFriendRequestsCount > 0 ? "badge rounded-pill text-bg-danger" : "badge rounded-pill text-bg-danger d-none";
+    var languageItems = new[]
+    {
+        new { Code = "en", Label = "🇬🇧 English" },
+        new { Code = "ru", Label = "🇷🇺 Русский" },
+        new { Code = "uk", Label = "🇺🇦 Українська" },
+        new { Code = "bg", Label = "🇧🇬 Български" }
+    };
+}
+
+<!DOCTYPE html>
+<html lang="@currentCulture">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"] - Enterprise Management</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+    <link href="~/css/app.css" rel="stylesheet" asp-append-version="true">
+</head>
+
+<body>
+    @if (isAuthenticated)
+    {
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <i class="bi bi-building"></i> Enterprise
+            </div>
+
+            <a asp-controller="Home" asp-action="Index" asp-route-culture="@currentCulture">
+                <i class="bi bi-speedometer2"></i> @Localizer["Dashboard"]
+            </a>
+            @if (canViewFields)
+            {
+                <a asp-controller="Navigation" asp-action="Fields" asp-route-culture="@currentCulture">
+                    <i class="bi bi-tree"></i> @Localizer["Fields"]
+                </a>
+            }
+            @if (canViewWarehouses)
+            {
+                <a asp-controller="Navigation" asp-action="Warehouses" asp-route-culture="@currentCulture">
+                    <i class="bi bi-box-seam"></i> @Localizer["Warehouses"]
+                </a>
+            }
+            @if (canViewEquipment)
+            {
+                <a asp-controller="Navigation" asp-action="Equipment" asp-route-culture="@currentCulture">
+                    <i class="bi bi-truck"></i> @Localizer["Equipment"]
+                </a>
+            }
+            @if (canViewTools)
+            {
+                <a asp-controller="Navigation" asp-action="Tools" asp-route-culture="@currentCulture">
+                    <i class="bi bi-tools"></i> @Localizer["Tools"]
+                </a>
+            }
+            <a asp-controller="Sharing" asp-action="Index" asp-route-culture="@currentCulture"
+                class="d-flex align-items-center justify-content-between">
+                <span><i class="bi bi-people"></i> @Localizer["Friends"]</span>
+                <span id="incoming-friend-requests-badge" class="@friendRequestsBadgeClass">@incomingFriendRequestsCount</span>
+            </a>
+            <div class="sidebar-auth">
+                <form asp-controller="Account" asp-action="Logout" method="post">
+                    <button type="submit" class="sidebar-auth-button">
+                        <i class="bi bi-box-arrow-left"></i> @Localizer["Logout"]
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="topbar">
+            <div class="ms-auto d-flex align-items-center gap-2">
+                @if (sharedOwners.Any())
+                {
+                    <div class="dropdown">
+                        <button class="btn btn-outline-primary dropdown-toggle btn-sm" type="button" data-bs-toggle="dropdown">
+                            View as
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            @foreach (var owner in sharedOwners)
+                            {
+                                var ownerGrants = sharedGrants.Where(x => x.OwnerUserId == owner.Id).OrderBy(x => x.Section).ToList();
+                                var activeOwnerClass = activeOwnerId == owner.Id ? "active" : "";
+                                <li>
+                                    <form asp-controller="Sharing" asp-action="OpenSharedData" method="post">
+                                        <input type="hidden" name="ownerUserId" value="@owner.Id" />
+                                        <input type="hidden" name="returnUrl" value="@currentReturnUrl" />
+                                        <button class="dropdown-item @activeOwnerClass" type="submit">
+                                            @owner.DisplayName
+                                            <small class="text-muted d-block">@string.Join(", ", ownerGrants.Select(x => x.Section).Distinct())</small>
+                                        </button>
+                                    </form>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                }
+                @if (sharedOwner != null)
+                {
+                    <form asp-controller="Sharing" asp-action="CloseSharedData" method="post"
+                        class="d-flex align-items-center gap-2">
+                        <input type="hidden" name="returnUrl" value="@currentReturnUrl" />
+                        <span class="badge text-bg-warning">Viewing: @sharedOwner.DisplayName</span>
+                        <button class="btn btn-sm btn-outline-warning" type="submit">Exit</button>
+                    </form>
+                }
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        🌍 @currentCulture.ToUpper()
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        @foreach (var language in languageItems)
+                        {
+                            <li><button type="button" class="dropdown-item language-option" data-culture="@language.Code">@language.Label</button></li>
+                        }
+                    </ul>
+                </div>
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary profile-button" type="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-person-circle"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li class="dropdown-header">@Localizer["Profile"]</li>
+                        <li><span class="dropdown-item-text">@displayName</span></li>
+                        @if (!string.IsNullOrWhiteSpace(userTag))
+                        {
+                            <li>
+                                <button type="button" class="dropdown-item text-muted" onclick="copyUserTag('@userTag', this)">
+                                    @Localizer["Username"]: <strong>@userTag</strong>
+                                    <small class="ms-2 copy-status d-none">@Localizer["Copied"]</small>
+                                </button>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (!isAuthenticated)
+    {
+        <div class="auth-language-switcher">
+            <div class="dropdown">
+                <button class="btn btn-outline-secondary dropdown-toggle btn-sm" type="button" data-bs-toggle="dropdown">
+                    🌍 @currentCulture.ToUpper()
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    @foreach (var language in languageItems)
+                    {
+                        <li><button type="button" class="dropdown-item language-option" data-culture="@language.Code">@language.Label</button></li>
+                    }
+                </ul>
+            </div>
+        </div>
+    }
+
+    <div class="@contentWrapperClass">
+        @if (isSharedMode && !currentSectionCanEdit)
+        {
+            <div class="alert alert-info d-flex align-items-center gap-2 mb-3">
+                <i class="bi bi-eye"></i>
+                <span>View-only mode. Editing is disabled for this section.</span>
+            </div>
+        }
+        <div class="content-inner fade-in">
+            @RenderBody()
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        window.isViewOnlySharedMode = @((isSharedMode && !currentSectionCanEdit).ToString().ToLowerInvariant());
+    </script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    @RenderSection("Scripts", required: false)
+</body>
+
+</html>

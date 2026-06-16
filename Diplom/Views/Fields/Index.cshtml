@@ -1,0 +1,65 @@
+@inject Microsoft.AspNetCore.Mvc.Localization.IViewLocalizer Localizer
+@using Diplom.Models.ViewModels
+
+@{
+    ViewData["Title"] = @Localizer["Fields"];
+}
+
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="text-gradient">@Localizer["Fields Management"]</h2>
+            <p class="text-muted mb-0">@Localizer["Choose a section to manage field operations"]</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <partial name="_SectionCard" model='new SectionCardModel {
+            Icon = "bi-plus-circle",
+            Title = @Localizer["Add Fields"].Value,
+            Description = @Localizer["Upload KML files to add new fields to the system"].Value,
+            Url = @Url.Action("UploadKml", "Kml"),
+            ButtonText = @Localizer["Add Fields"].Value,
+            Color = "success"
+        }' />
+
+        <partial name="_SectionCard" model='new SectionCardModel {
+            Icon = "bi-clipboard-check",
+            Title = @Localizer["Field Situation Log"].Value,
+            Description = @Localizer["Record field inspections and observations with photos"].Value,
+            Url = @Url.Action("FieldSituationLog", "Navigation"),
+            ButtonText = @Localizer["Field Log"].Value,
+            Color = "info"
+        }' />
+
+        <partial name="_SectionCard" model='new SectionCardModel {
+            Icon = "bi-arrow-repeat",
+            Title = @Localizer["Crop Rotation"].Value,
+            Description = @Localizer["Plan and manage crop rotation for each field"].Value,
+            Url = @Url.Action("CropRotation", "Navigation"),
+            ButtonText = @Localizer["Crop Rotation"].Value,
+            Color = "warning"
+        }' />
+    </div>
+
+    <div class="row">
+        <partial name="_SectionCard" model='new SectionCardModel {
+            Icon = "bi-list-task",
+            Title = @Localizer["Field Work Log"].Value,
+            Description = @Localizer["Track all field operations and activities"].Value,
+            Url = @Url.Action("FieldWorkLogPlan", "Fields"),
+            ButtonText = @Localizer["Work Log"].Value,
+            Color = "primary"
+        }' />
+
+        <partial name="_SectionCard" model='new SectionCardModel {
+            Icon = "bi-journal-text",
+            Title = @Localizer["Fields Journal"].Value,
+            Description = @Localizer["View and manage detailed information about each field"].Value,
+            Url = @Url.Action("FieldsJournal", "Navigation"),
+            ButtonText = @Localizer["Fields Journal"].Value,
+            Color = "secondary"
+        }' />
+    </div>
+
+</div>

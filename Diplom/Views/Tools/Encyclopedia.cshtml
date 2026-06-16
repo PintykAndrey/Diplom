@@ -1,0 +1,113 @@
+@model List<Diplom.Models.Tools.EncyclopediaItem>
+@inject Microsoft.AspNetCore.Mvc.Localization.IViewLocalizer Localizer
+
+@{
+    ViewData["Title"] = Localizer["Encyclopedia"];
+    string category = ViewBag.CurrentCategory;
+}
+
+<div class="container mt-4">
+
+    <h2 class="mb-4 text-center">@Localizer["Encyclopedia"]</h2>
+
+    <div class="d-flex justify-content-center gap-3 mb-4">
+
+        <a asp-action="Encyclopedia" asp-route-category="Operation"
+            class="btn @(category == "Operation" ? "btn-primary" : "btn-outline-primary")">
+            @Localizer["Operation Types"]
+        </a>
+
+        <a asp-action="Encyclopedia" asp-route-category="Seed"
+            class="btn @(category == "Seed" ? "btn-success" : "btn-outline-success")">
+            @Localizer["Seed Types"]
+        </a>
+
+        <a asp-action="Encyclopedia" asp-route-category="Fertilizer"
+            class="btn @(category == "Fertilizer" ? "btn-warning" : "btn-outline-warning")">
+            @Localizer["Fertilizer Types"]
+        </a>
+
+        <a asp-action="Encyclopedia" asp-route-category="Pesticide"
+            class="btn @(category == "Pesticide" ? "btn-danger" : "btn-outline-danger")">
+            @Localizer["Pesticide Types"]
+        </a>
+
+    </div>
+
+    <div class="card shadow-sm p-3">
+
+        <table class="table table-bordered text-center align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th class="w-60px">@Localizer["No."]</th>
+                    <th>@Localizer["Name"]</th>
+                    <th class="w-180px">@Localizer["Actions"]</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @for (int i = 0; i < Model.Count; i++)
+                {
+                    var isProtected = Model[i].Category == "Operation" && Model[i].Name == "Sowing";
+
+                    <tr>
+                        <td>@(i + 1)</td>
+
+                        <td>
+                            @if (isProtected)
+                            {
+                                <span class="fw-bold">@Model[i].Name</span>
+                            }
+                            else
+                            {
+                                <input form="update-form-@Model[i].Id" type="text" name="name" value="@Model[i].Name"
+                                    class="form-control form-control-sm" />
+                            }
+                        </td>
+
+                        <td>
+                            @if (isProtected)
+                            {
+                                <span>—</span>
+                            }
+                            else
+                            {
+                                <div class="d-flex justify-content-center gap-2">
+                                    <form id="update-form-@Model[i].Id" asp-action="Update" method="post">
+                                        <input type="hidden" name="id" value="@Model[i].Id" />
+                                        <button class="btn btn-sm btn-primary">
+                                            @Localizer["Save"]
+                                        </button>
+                                    </form>
+                                    <form asp-action="Delete" method="post">
+                                        <input type="hidden" name="id" value="@Model[i].Id" />
+                                        <button class="btn btn-sm btn-danger">
+                                            @Localizer["Delete"]
+                                        </button>
+                                    </form>
+                                </div>
+                            }
+                        </td>
+                    </tr>
+                }
+
+                <tr class="table-secondary">
+                    <td>+</td>
+                    <td colspan="2">
+                        <form asp-action="Add" method="post" class="d-flex">
+                            <input type="hidden" name="category" value="@category" />
+                            <input name="name" class="form-control form-control-sm me-2"
+                                placeholder="@Localizer["New Name"]" />
+                            <button class="btn btn-sm btn-success">
+                                @Localizer["Add"]
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+
+    </div>
+
+</div>

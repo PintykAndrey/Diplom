@@ -1,0 +1,333 @@
+
+.table tbody td {
+    vertical-align: middle;
+}
+
+.multiple-inputs {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 0;
+    margin: 0;
+}
+
+.multiple-inputs > input,
+.multiple-inputs > select,
+.multiple-inputs > textarea {
+    margin: 0 !important;
+    width: 100% !important;
+}
+
+thead tr.second-row th {
+    border-bottom: none;
+}
+
+thead tr.second-row th.with-border {
+    border-bottom: 1px solid #dee2e6;
+}
+
+.field-photo {
+    max-width: 120px;
+    max-height: 120px;
+    margin: 3px;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    object-fit: cover;
+}
+
+.field-photo:hover {
+    border-color: #0d6efd;
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.photo-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    cursor: pointer;
+}
+
+.photo-modal img {
+    max-width: 90%;
+    max-height: 90%;
+    border-radius: 8px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+}
+
+.photo-modal-close {
+    position: absolute;
+    top: 20px;
+    right: 40px;
+    color: white;
+    font-size: 40px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: opacity 0.3s ease;
+}
+
+.photo-modal-close:hover {
+    opacity: 0.7;
+}
+
+.photo-section {
+    min-height: 60px;
+    max-width: 300px;
+}
+
+.photo-item {
+    position: relative;
+    display: inline-block;
+    margin: 2px;
+    border: 2px solid #dee2e6;
+    border-radius: 4px;
+    overflow: hidden;
+    transition: all 0.2s ease;
+}
+
+.photo-item:hover {
+    border-color: #0d6efd;
+    transform: scale(1.05);
+}
+
+.photo-thumbnail {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    display: block;
+}
+
+.btn-remove-photo {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    border-radius: 50%;
+    font-size: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(220, 53, 69, 0.9);
+    color: white;
+    border: none;
+    cursor: pointer;
+    opacity: 0.8;
+    transition: opacity 0.2s ease;
+}
+
+.btn-remove-photo:hover {
+    opacity: 1;
+}
+
+.photo-input {
+    display: none;
+}
+
+.new-photos-preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    margin-bottom: 5px;
+}
+
+.existing-photos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    margin-bottom: 5px;
+}
+
+.photo-item.new-photo {
+    opacity: 0.7;
+    border-color: #28a745;
+}
+
+.photo-item.removing {
+    opacity: 0.3;
+    border-color: #dc3545;
+    transform: scale(0.95);
+}
+
+.form-select, .form-control {
+    border-radius: 0.375rem;
+    border: 1px solid #dee2e6;
+    transition: all 0.2s ease;
+}
+
+.form-select:focus, .form-control:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(13, 110, 253, 0.05);
+}
+
+.badge {
+    font-size: 0.75em;
+}
+
+.btn-sm {
+    font-size: 0.875rem;
+}
+
+.text-center .btn {
+    margin: 0 5px;
+    padding: 0.5rem 1.5rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.text-center .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.text-center .btn.active {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+    color: white;
+}
+
+.nav-tabs {
+    display: none;
+}
+
+.table {
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-bottom: 0;
+}
+
+.table.table-bordered {
+    border: 1px solid #dee2e6;
+}
+
+.table.table-bordered th,
+.table.table-bordered td {
+    border: 1px solid #dee2e6;
+}
+
+.table thead th {
+    background-color: #f8f9fa;
+    color: #495057;
+    font-weight: 600;
+    padding: 0.75rem;
+    text-align: center;
+}
+
+.table tbody td {
+    padding: 0.5rem;
+    vertical-align: middle;
+}
+
+.table tbody tr:hover {
+    background-color: rgba(0, 123, 255, 0.05);
+}
+
+.table thead th {
+    background-color: #f8f9fa !important;
+    color: #495057 !important;
+    font-weight: 600 !important;
+    border: 1px solid #dee2e6 !important;
+    padding: 0.75rem !important;
+    text-align: center !important;
+}
+
+.table tbody td {
+    padding: 0.5rem !important;
+    vertical-align: middle !important;
+    border: 1px solid #dee2e6 !important;
+    border-top: none !important;
+}
+
+.table tbody tr:hover {
+    background-color: rgba(0, 123, 255, 0.05) !important;
+}
+
+.table tbody tr:first-child td {
+    border-top: 1px solid #dee2e6 !important;
+}
+
+.card-body.p-0 .table {
+    margin-bottom: 0;
+}
+
+.card-body.p-0 .table:last-child {
+    margin-bottom: 0;
+}
+
+.form-control-sm {
+    border: 2px solid #e9ecef;
+    border-radius: 0.375rem;
+    transition: border-color 0.2s ease;
+}
+
+.form-control-sm:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+.form-select-sm {
+    border: 2px solid #e9ecef;
+    border-radius: 0.375rem;
+    transition: border-color 0.2s ease;
+}
+
+.form-select-sm:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+.btn-sm {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+    border-radius: 0.375rem;
+}
+
+.nav-tabs .nav-link {
+    border: 2px solid #dee2e6;
+    border-bottom: none;
+    color: #495057;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.nav-tabs .nav-link:hover {
+    border-color: #e9ecef;
+    color: #0d6efd;
+    background-color: #f8f9fa;
+}
+
+.nav-tabs .nav-link.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-color: #667eea;
+}
+
+.nav-tabs .nav-link i {
+    font-size: 1.1em;
+}
+
+@media (max-width: 768px) {
+    .field-photo {
+        max-width: 60px;
+        max-height: 60px;
+    }
+    
+    .photo-thumbnail {
+        width: 50px;
+        height: 50px;
+    }
+}

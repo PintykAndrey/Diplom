@@ -1,0 +1,99 @@
+@inject Microsoft.AspNetCore.Mvc.Localization.IViewLocalizer Localizer
+
+<div class="modal fade" id="quickActionsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">@Localizer["Quick Actions Settings"]</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h6 class="mb-0">@Localizer["Add New Action"]</h6>
+                    </div>
+                    <div class="card-body">
+                        <form id="addQuickActionForm">
+                            <div id="quickActionValidationMessage" class="alert alert-warning d-none" role="alert">
+                                @Localizer["Name and URL are required"]
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-2">
+                                    <label>@Localizer["Name"]</label>
+                                    <input type="text" id="newActionName" class="form-control"
+                                        placeholder="@Localizer["Action Name"]" required>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <label>@Localizer["Icon"]</label>
+                                    <select id="newActionIcon" class="form-select" required>
+                                        <option value="bi-plus-circle">➕ Plus Circle</option>
+                                        <option value="bi-list-task">📋 List Task</option>
+                                        <option value="bi-grid-3x3-gap">⊞ Grid</option>
+                                        <option value="bi-box-seam">📦 Box</option>
+                                        <option value="bi-arrow-repeat">🔄 Arrow Repeat</option>
+                                        <option value="bi-archive">📦 Archive</option>
+                                        <option value="bi-book">📚 Book</option>
+                                        <option value="bi-translate">🌐 Translate</option>
+                                        <option value="bi-shop">🏪 Shop</option>
+                                        <option value="bi-journal-text">📝 Journal</option>
+                                        <option value="bi-tree">🌳 Tree</option>
+                                        <option value="bi-map">🗺️ Map</option>
+                                        <option value="bi-gear">⚙️ Gear</option>
+                                        <option value="bi-lightning">⚡ Lightning</option>
+                                        <option value="bi-star">⭐ Star</option>
+                                        <option value="bi-heart">❤️ Heart</option>
+                                        <option value="bi-trash">🗑️ Trash</option>
+                                        <option value="bi-pencil">✏️ Pencil</option>
+                                        <option value="bi-check-circle">✅ Check Circle</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-2">
+                                    <label>@Localizer["Color"]</label>
+                                    <select id="newActionColor" class="form-select" required>
+                                        <option value="primary">@Localizer["Primary"]</option>
+                                        <option value="success">@Localizer["Success"]</option>
+                                        <option value="info">@Localizer["Info"]</option>
+                                        <option value="warning">@Localizer["Warning"]</option>
+                                        <option value="danger">@Localizer["Danger"]</option>
+                                        <option value="secondary">@Localizer["Secondary"]</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <label>@Localizer["URL"]</label>
+                                    <input type="text" id="newActionUrl" class="form-control"
+                                        placeholder="/Controller/Action" required>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-2">
+                                    <label>@Localizer["Display Order"]</label>
+                                    <input type="number" id="newActionOrder" class="form-control" value="0" min="0">
+                                </div>
+                                <div class="col-md-6 mb-2 d-flex align-items-end">
+                                    <button type="button" class="btn btn-success w-100" onclick="addQA()">
+                                        <i class="bi bi-plus-circle"></i> @Localizer["Add"]
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0">@Localizer["Your Actions"]</h6>
+                    </div>
+                    <div class="card-body">
+                        <div id="quickActionsSettingsList" class="list-group">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Localizer["Close"]</button>
+            </div>
+        </div>
+    </div>
+</div>

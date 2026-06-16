@@ -1,0 +1,88 @@
+﻿@model List<Diplom.Models.Warehouses.MaterialLogModel>
+@inject Microsoft.AspNetCore.Mvc.Localization.IViewLocalizer Localizer
+
+@{
+    ViewData["Title"] = @Localizer["Fuel"].Value;
+    int newIndex = Model.Count;
+}
+
+<h2 class="text-center">@Localizer["Fuel"]</h2>
+
+<form asp-action="Save" asp-controller="Warehouses" method="post">
+    <input type="hidden" name="category" value="Fuel" />
+
+    <table class="table table-bordered text-center">
+        <thead>
+            <tr>
+                <th>@Localizer["No."]</th>
+                <th>@Localizer["Date"]</th>
+                <th>@Localizer["Name"]</th>
+                <th>@Localizer["Unit"]</th>
+                <th>@Localizer["Quantity"]</th>
+                <th>@Localizer["Price"]</th>
+                <th>@Localizer["Sum"]</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @for (int i = 0; i < Model.Count; i++)
+            {
+                <tr>
+                    <td>@(i + 1)</td>
+
+                    <td>
+                        @Model[i].Date.ToLocalTime().ToString("dd.MM.yyyy")
+                        <input type="hidden" name="models[@i].Id" value="@Model[i].Id" />
+                    </td>
+
+                    <td>
+                        <select name="models[@i].Name" class="form-select form-select-sm" required>
+                            <option value="Gasoline" selected="@(Model[i].Name == "Gasoline")">@Localizer["Gasoline"]
+                            </option>
+                            <option value="Diesel" selected="@(Model[i].Name == "Diesel")">@Localizer["Diesel"]</option>
+                        </select>
+                    </td>
+                    <td>
+                        <input type="hidden" name="models[@i].Unit" value="l" />
+                        @Localizer["l"]
+                    </td>
+                    <td><input type="text" inputmode="decimal" pattern="[0-9]+([\.,][0-9]+)?" name="models[@i].Quantity" value="@Model[i].Quantity"
+                            class="form-control" required /></td>
+                    <td><input type="text" inputmode="decimal" pattern="[0-9]+([\.,][0-9]+)?" name="models[@i].Price" value="@Model[i].Price" class="form-control"
+                            required /></td>
+
+                    <td>@(Model[i].Sum?.ToString("0.00"))</td>
+                </tr>
+            }
+        </tbody>
+
+        <tfoot>
+            <tr>
+                <td>+</td>
+                <td>@DateTime.Now.ToString("dd.MM.yyyy")</td>
+
+                <td>
+                    <select name="models[@newIndex].Name" class="form-select form-select-sm">
+                        <option value="Gasoline">@Localizer["Gasoline"]</option>
+                        <option value="Diesel">@Localizer["Diesel"]</option>
+                    </select>
+                </td>
+                <td>
+                    <input type="hidden" name="models[@newIndex].Unit" value="l" />
+                    @Localizer["l"]
+                </td>
+                <td><input type="text" inputmode="decimal" pattern="[0-9]+([\.,][0-9]+)?" name="models[@newIndex].Quantity" class="form-control" />
+                </td>
+                <td><input type="text" inputmode="decimal" pattern="[0-9]+([\.,][0-9]+)?" name="models[@newIndex].Price" class="form-control" /></td>
+                <td>—</td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary btn-save">@Localizer["Save"]</button>
+    </div>
+</form>
+
+
+

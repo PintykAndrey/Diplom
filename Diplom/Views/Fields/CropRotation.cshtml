@@ -1,0 +1,220 @@
+﻿@inject Microsoft.AspNetCore.Mvc.Localization.IViewLocalizer Localizer
+
+@model Diplom.Models.Fields.CropRotationViewModel
+
+@{
+    ViewData["Title"] = Localizer["Crop Rotation"];
+    var rotationLogs = ViewBag.RotationLogs as IEnumerable<Diplom.Models.Fields.CropRotationLog> ??
+    Enumerable.Empty<Diplom.Models.Fields.CropRotationLog>();
+    var canEdit = ViewBag.CanEdit as bool? ?? true;
+    var cropNames = Model.Crops.ToDictionary(x => x.Id, x => x.Name);
+}
+
+<div class="container mt-4">
+    <h2 class="mb-4 text-center">@Localizer["Crop Rotation"]</h2>
+
+    <form asp-action="SaveCropRotation" method="post">
+        <table class="table table-bordered text-center align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>@Localizer["Field"]</th>
+                    @foreach (var year in Model.Years)
+                    {
+                        <th>@year</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var field in Model.Fields)
+                {
+                    <tr>
+                        <td class="fw-bold">@field.Name (@field.AreaHectares @Localizer["ha"])</td>
+                        @foreach (var year in Model.Years)
+                        {
+                            <td>
+                                @{
+                                    int currentYear = DateTime.Now.Year;
+                                    var savedCrops = rotationLogs
+                                    .Where(r => r.FieldId == field.Id && r.Year == year)
+                                    .Select(r => r.CropId)
+                                    .ToList();
+
+                                    var pastLogs = (ViewBag.LogsByFieldYear as IEnumerable<dynamic>)
+                                    ?.Where(l => l.FieldId == field.Id && l.Year == year)
+                                    .ToList() ?? new List<dynamic>();
+                                }
+
+                                <div class="crop-container">
+                                    @if (year < currentYear)
+                                    {
+                                        @if (pastLogs.Any())
+                                        {
+                                            @foreach (var log in pastLogs)
+                                            {
+                                                <div style="padding: 2px 0;">
+                                                    @log.GrainName
+                                                    @if (log.GrainRateFact != null)
+                                                    {
+                                                        <span> (@log.GrainRateFact @Localizer["ha"])</span>
+                                                    }
+                                                </div>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <div style="font-size: 0.9em;">—</div>
+                                        }
+                                    }
+                                    else if (year == currentYear)
+                                    {
+                                        @if (pastLogs.Any())
+                                        {
+                                            @foreach (var log in pastLogs)
+                                            {
+                                                <div style="padding: 2px 0;">
+                                                    @log.GrainName
+                                                    @if (log.GrainRateFact != null)
+                                                    {
+                                                        <span> (@log.GrainRateFact @Localizer["ha"])</span>
+                                                    }
+                                                </div>
+                                            }
+                                        }
+
+                                        @if (canEdit)
+                                        {
+                                            @foreach (var cropId in savedCrops)
+                                            {
+                                                <div>
+                                                    <input type="hidden" name="FieldIds" value="@field.Id" />
+                                                    <input type="hidden" name="Years" value="@year" />
+                                                    <select class="form-control form-control-sm crop-select" name="Crops">
+                                                        <option value="0">—</option>
+                                                        @foreach (var crop in Model.Crops)
+                                                        {
+                                                            if (crop.Id == cropId)
+                                                            {
+                                                                <option value="@crop.Id" selected>@crop.Name</option>
+                                                            }
+                                                            else
+                                                            {
+                                                                <option value="@crop.Id">@crop.Name</option>
+                                                            }
+                                                        }
+                                                    </select>
+                                                </div>
+                                            }
+
+                                            <div>
+                                                <input type="hidden" name="FieldIds" value="@field.Id" />
+                                                <input type="hidden" name="Years" value="@year" />
+                                                <select class="form-control form-control-sm crop-select" name="Crops">
+                                                    <option value="0">—</option>
+                                                    @foreach (var crop in Model.Crops)
+                                                    {
+                                                        <option value="@crop.Id">@crop.Name</option>
+                                                    }
+                                                </select>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            @foreach (var cropId in savedCrops)
+                                            {
+                                                <div>@(cropNames.TryGetValue(cropId, out var cropName) ? cropName : "—")</div>
+                                            }
+                                        }
+                                    }
+                                    else
+                                    {
+                                        @if (canEdit)
+                                        {
+                                            @foreach (var cropId in savedCrops)
+                                            {
+                                                <div>
+                                                    <input type="hidden" name="FieldIds" value="@field.Id" />
+                                                    <input type="hidden" name="Years" value="@year" />
+                                                    <select class="form-control form-control-sm crop-select" name="Crops">
+                                                        <option value="0">—</option>
+                                                        @foreach (var crop in Model.Crops)
+                                                        {
+                                                            if (crop.Id == cropId)
+                                                            {
+                                                                <option value="@crop.Id" selected>@crop.Name</option>
+                                                            }
+                                                            else
+                                                            {
+                                                                <option value="@crop.Id">@crop.Name</option>
+                                                            }
+                                                        }
+                                                    </select>
+                                                </div>
+                                            }
+
+                                            <div>
+                                                <input type="hidden" name="FieldIds" value="@field.Id" />
+                                                <input type="hidden" name="Years" value="@year" />
+                                                <select class="form-control form-control-sm crop-select" name="Crops">
+                                                    <option value="0">—</option>
+                                                    @foreach (var crop in Model.Crops)
+                                                    {
+                                                        <option value="@crop.Id">@crop.Name</option>
+                                                    }
+                                                </select>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            @foreach (var cropId in savedCrops)
+                                            {
+                                                <div>@(cropNames.TryGetValue(cropId, out var cropName) ? cropName : "—")</div>
+                                            }
+                                        }
+                                    }
+                                </div>
+                            </td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        @if (canEdit)
+        {
+            <div class="text-end mt-3">
+                <button type="submit" class="btn btn-primary">@Localizer["Save"]</button>
+            </div>
+        }
+    </form>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        function addNewSelectIfNeeded(container, select) {
+            const parentDiv = select.closest("div");
+
+            const nextDiv = parentDiv.nextElementSibling;
+            if (select.value != "0" && (!nextDiv || !nextDiv.classList.contains("new"))) {
+                const newDiv = parentDiv.cloneNode(true);
+                newDiv.classList.add("new");
+                newDiv.querySelector("select.crop-select").value = "0";
+
+                parentDiv.after(newDiv);
+
+                newDiv.querySelector("select.crop-select").addEventListener("change", function () {
+                    addNewSelectIfNeeded(container, this);
+                });
+            }
+        }
+
+        document.querySelectorAll(".crop-container").forEach(container => {
+            container.querySelectorAll("select.crop-select").forEach(select => {
+                select.addEventListener("change", function () {
+                    addNewSelectIfNeeded(container, this);
+                });
+            });
+        });
+
+    });
+</script>

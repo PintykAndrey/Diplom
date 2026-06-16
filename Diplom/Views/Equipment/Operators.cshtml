@@ -1,0 +1,91 @@
+@model List<Diplom.Models.OperatorModel>
+@inject Microsoft.AspNetCore.Mvc.Localization.IViewLocalizer Localizer
+
+@{
+    ViewData["Title"] = Localizer["Operators"];
+    int newIndex = Model.Count;
+    var canEdit = ViewBag.CanEdit as bool? ?? true;
+}
+
+
+<h2 class="text-center">@Localizer["Operators"]</h2>
+
+<form asp-action="Save" asp-controller="Operators" method="post">
+
+    <table class="table table-bordered text-center">
+
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>@Localizer["First Name"]</th>
+                <th>@Localizer["Last Name"]</th>
+                <th>@Localizer["Surname"]</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @for (int i = 0; i < Model.Count; i++)
+            {
+                <tr>
+                    <td>@(i + 1)</td>
+
+                    <td>
+                        <input type="hidden" name="models[@i].Id" value="@Model[i].Id" />
+                        @if (canEdit)
+                        {
+                            <input name="models[@i].FirstName" value="@Model[i].FirstName" class="form-control" />
+                        }
+                        else
+                        {
+                            @Model[i].FirstName
+                        }
+                    </td>
+
+                    <td>
+                        @if (canEdit)
+                        {
+                            <input name="models[@i].LastName" value="@Model[i].LastName" class="form-control" />
+                        }
+                        else
+                        {
+                            @Model[i].LastName
+                        }
+                    </td>
+
+                    <td>
+                        @if (canEdit)
+                        {
+                            <input name="models[@i].Surname" value="@Model[i].Surname" class="form-control" />
+                        }
+                        else
+                        {
+                            @Model[i].Surname
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+
+        @if (canEdit)
+        {
+            <tfoot>
+                <tr>
+                    <td>+</td>
+
+                    <td><input name="models[@newIndex].FirstName" class="form-control" /></td>
+                    <td><input name="models[@newIndex].LastName" class="form-control" /></td>
+                    <td><input name="models[@newIndex].Surname" class="form-control" /></td>
+                </tr>
+            </tfoot>
+        }
+
+    </table>
+
+    @if (canEdit)
+    {
+        <div class="text-end mt-3">
+            <button type="submit" class="btn btn-primary">@Localizer["Save"]</button>
+        </div>
+    }
+
+</form>

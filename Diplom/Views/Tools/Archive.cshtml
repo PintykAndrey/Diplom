@@ -1,0 +1,275 @@
+@model IEnumerable<Diplom.Models.Fields.FieldEntity>
+@inject Microsoft.AspNetCore.Mvc.Localization.IViewLocalizer Localizer
+
+@{
+    ViewData["Title"] = @Localizer["Archive"];
+    var canEdit = ViewBag.CanEdit as bool? ?? true;
+}
+
+
+<div class="container-fluid mt-3">
+    <h2>@Localizer["Archive Management"]</h2>
+    <p class="text-muted">@Localizer["Here you can restore or permanently delete archived fields"]</p>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>@Localizer["Field Name"]</th>
+                            <th>@Localizer["Area"] (@Localizer["ha"])</th>
+                            <th>@Localizer["Perimeter"] (@Localizer["m"])</th>
+                            <th>@Localizer["Archived Date"]</th>
+                            <th>@Localizer["Actions"]</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model != null && Model.Any())
+                        {
+                            @foreach (var field in Model)
+                            {
+                                <tr>
+                                    <td>@field.Name</td>
+                                    <td>@field.AreaHectares.ToString("F2")</td>
+                                    <td>@field.PerimeterMeters.ToString("F2")</td>
+                                    <td>@field.ArchivedAt?.ToString("dd.MM.yyyy HH:mm")</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-info me-1" data-allow-view-mode-action="true" onclick="showFieldDetails(@field.Id)">
+                                            <i class="bi bi-eye"></i> @Localizer["Details"]
+                                        </button>
+                                        <button class="btn btn-sm btn-success me-1" onclick="restoreField(@field.Id)" disabled="@(!canEdit)">
+                                            <i class="bi bi-arrow-counterclockwise"></i> @Localizer["Restore"]
+                                        </button>
+                                        <button class="btn btn-sm btn-danger" onclick="confirmDelete(@field.Id, '@field.Name')" disabled="@(!canEdit)">
+                                            <i class="bi bi-trash"></i> @Localizer["Delete Permanently"]
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="5" class="text-center text-muted">
+                                    @Localizer["No archived fields found"]
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="detailsModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">@Localizer["Archived Field Details"]</h5>
+                <button type="button" class="btn-close" data-allow-view-mode-action="true" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>@Localizer["Field Information"]</h6>
+                        <table class="table table-sm">
+                            <tr><td><strong>@Localizer["Name"]:</strong></td><td id="detailName"></td></tr>
+                            <tr><td><strong>@Localizer["Area"]:</strong></td><td id="detailArea"></td></tr>
+                            <tr><td><strong>@Localizer["Perimeter"]:</strong></td><td id="detailPerimeter"></td></tr>
+                            <tr><td><strong>@Localizer["Archived Date"]:</strong></td><td id="detailArchivedDate"></td></tr>
+                        </table>
+                    </div>
+                </div>
+
+                <hr>
+
+                <h6>@Localizer["Operations"]</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm" id="operationsTable">
+                        <thead>
+                            <tr>
+                                <th>@Localizer["Operation"]</th>
+                                <th>@Localizer["Date"]</th>
+                                <th>@Localizer["Machine"]</th>
+                                <th>@Localizer["Inputs"]</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+
+                <h6>@Localizer["Inspection Notes"]</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm" id="notesTable">
+                        <thead>
+                            <tr>
+                                <th>@Localizer["Date"]</th>
+                                <th>@Localizer["Description"]</th>
+                                <th>@Localizer["Photos"]</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+
+                <h6>@Localizer["Crop Rotation"]</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm" id="rotationTable">
+                        <thead>
+                            <tr>
+                                <th>@Localizer["Year"]</th>
+                                <th>@Localizer["Crop"]</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-allow-view-mode-action="true" data-bs-dismiss="modal">@Localizer["Close"]</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">@Localizer["Permanent Delete Confirmation"]</h5>
+                <button type="button" class="btn-close" data-allow-view-mode-action="true" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>@Localizer["Are you sure you want to permanently delete field"]: <strong id="deleteFieldName"></strong>?</p>
+                <p class="text-danger">@Localizer["This action cannot be undone. All field data will be permanently deleted."]</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Localizer["Cancel"]</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">@Localizer["Delete Permanently"]</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<form id="csrfForm" asp-controller="Archive" asp-action="Archive" method="post">
+    @Html.AntiForgeryToken()
+</form>
+
+<script>
+    let currentFieldId = null;
+
+    function showFieldDetails(fieldId) {
+        fetch('@Url.Action("GetArchivedFieldDetails", "Archive")?id=' + fieldId)
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('detailName').textContent = data.field.name;
+                document.getElementById('detailArea').textContent = data.field.areaHectares + ' ha';
+                document.getElementById('detailPerimeter').textContent = data.field.perimeterMeters + ' m';
+                document.getElementById('detailArchivedDate').textContent = data.field.archivedAt;
+
+                const opsTable = document.querySelector('#operationsTable tbody');
+                opsTable.innerHTML = '';
+                data.workLogs.forEach(item => {
+                    const materials = (item.materials || [])
+                        .map(material => `${material.category || ''}${material.name ? ': ' + material.name : ''}${material.rate ? ' / ' + material.rate : ''}${material.total ? ' / ' + material.total : ''}`)
+                        .filter(Boolean)
+                        .join('<br>');
+                    const aggregates = (item.aggregates || [])
+                        .map(aggregate => `${aggregate.equipmentType || ''}${aggregate.equipment ? ': ' + aggregate.equipment : ''}`)
+                        .filter(Boolean)
+                        .join('<br>');
+                    const inputs = [
+                        item.fuelTotal ? `@Localizer["Fuel"]: ${item.fuelTotal}` : '',
+                        materials,
+                        aggregates
+                    ].filter(Boolean).join('<br>');
+
+                    opsTable.innerHTML += `
+                        <tr>
+                            <td>${item.type || ''}: ${item.operation || ''}</td>
+                            <td>${item.dateFrom || ''} - ${item.dateTo || ''}</td>
+                            <td>${item.mechanic || ''}</td>
+                            <td>${inputs}</td>
+                        </tr>
+                    `;
+                });
+
+                const notesTable = document.querySelector('#notesTable tbody');
+                notesTable.innerHTML = '';
+                data.inspectionNotes.forEach(note => {
+                    const photos = note.photos && note.photos.length > 0
+                        ? note.photos.map(p => `<a href="${p}" target="_blank">@Localizer["Photo"]</a>`).join('<br>')
+                        : '';
+                    notesTable.innerHTML += `
+                        <tr>
+                            <td>${note.date || ''}</td>
+                            <td>${note.description || ''}</td>
+                            <td>${photos}</td>
+                        </tr>
+                    `;
+                });
+
+                const rotationTable = document.querySelector('#rotationTable tbody');
+                rotationTable.innerHTML = '';
+                data.cropRotations.forEach(rotation => {
+                    rotationTable.innerHTML += `
+                        <tr>
+                            <td>${rotation.year}</td>
+                            <td>${rotation.crop || ''}</td>
+                        </tr>
+                    `;
+                });
+
+                new bootstrap.Modal(document.getElementById('detailsModal')).show();
+            });
+    }
+
+    function restoreField(fieldId) {
+        const token = document.querySelector('#csrfForm input[name="__RequestVerificationToken"]').value;
+        
+        fetch('@Url.Action("RestoreField", "Archive")', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'RequestVerificationToken': token
+            },
+            body: `id=${fieldId}&__RequestVerificationToken=${token}`
+        })
+        .then(response => {
+            if (response.ok) {
+                window.location.reload();
+            }
+        })
+        .catch(() => { });
+    }
+
+    function confirmDelete(fieldId, fieldName) {
+        currentFieldId = fieldId;
+        document.getElementById('deleteFieldName').textContent = fieldName;
+        new bootstrap.Modal(document.getElementById('deleteModal')).show();
+    }
+
+    document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+        if (!currentFieldId) return;
+
+        const token = document.querySelector('#csrfForm input[name="__RequestVerificationToken"]').value;
+        
+        fetch('@Url.Action("PermanentlyDeleteField", "Archive")', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'RequestVerificationToken': token
+            },
+            body: `id=${currentFieldId}&__RequestVerificationToken=${token}`
+        })
+        .then(response => {
+            if (response.ok) {
+                bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
+                window.location.reload();
+            }
+        })
+        .catch(() => { });
+    });
+</script>

@@ -1,0 +1,2232 @@
+@functions {
+    public Microsoft.AspNetCore.Html.IHtmlContent renderMaterialCategoryRows(int rowIndex, List<Diplom.Models.Fields.FieldWorkLogPlanMaterialModel> items, string category) {
+        var content = new System.Text.StringBuilder();
+        int count = items?.Count ?? 1;
+        if (count == 0) count = 1;
+        for (int m = 0; m < count; m++) {
+            var item = (items != null && m < items.Count) ? items[m] : null;
+            content.Append($@"
+                <div class=""material-row mb-1"" data-category=""{category}"" data-material-index=""{m}"">
+                    <div class=""input-group input-group-sm"">
+                        <input type=""hidden"" name=""models[{rowIndex}].MaterialRowIds_List[{m}]"" value=""{(item?.Id ?? 0)}"" />
+                        <input type=""hidden"" name=""models[{rowIndex}].MaterialCategories_List[{m}]"" value=""{category}"" class=""material-category"" />
+                        <input type=""hidden"" name=""models[{rowIndex}].SeedTypeIds_List[{m}]"" value=""{(item?.SeedTypeId?.ToString() ?? "")}"" class=""seedtype-id"" />
+                        <input type=""hidden"" name=""models[{rowIndex}].MaterialIds_List[{m}]"" value=""{(item?.MaterialId?.ToString() ?? "")}"" class=""material-id"" />
+                        <div class=""cascading-select form-control form-control-sm worklog-material-select""
+                             data-row-index=""{rowIndex}"" data-material-index=""{m}"" data-category=""{category}""
+                             data-seedtype=""{(item?.SeedTypeId?.ToString() ?? "")}"" data-materialid=""{(item?.MaterialId?.ToString() ?? "")}""
+                             data-placeholder=""Select {category}""></div>
+                        <div class=""input-group-append d-flex"">
+                            <button type=""button"" class=""btn btn-outline-primary btn-sm add-material-btn"" data-row-index=""{rowIndex}"" data-category=""{category}"">+</button>
+                            <button type=""button"" class=""btn btn-outline-danger btn-sm remove-material-btn"" data-row-index=""{rowIndex}"" data-category=""{category}"" data-material-index=""{m}"">&times;</button>
+                        </div>
+                    </div>
+                </div>");
+        }
+        return new Microsoft.AspNetCore.Html.HtmlString(content.ToString());
+    }
+
+    public Microsoft.AspNetCore.Html.IHtmlContent renderRateCategoryRows(int rowIndex, List<Diplom.Models.Fields.FieldWorkLogPlanMaterialModel> items, string category) {
+        var content = new System.Text.StringBuilder();
+        int count = items?.Count ?? 1;
+        if (count == 0) count = 1;
+        for (int m = 0; m < count; m++) {
+            var item = (items != null && m < items.Count) ? items[m] : null;
+            content.Append($@"
+                <div class=""rate-row mb-1"" data-category=""{category}"" data-material-index=""{m}"">
+                    <input type=""number"" step=""0.01"" name=""models[{rowIndex}].Rates_List[{m}]"" value=""{(item?.Rate?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "")}""
+                           class=""form-control form-control-sm rate-input"" data-row-index=""{rowIndex}"" data-category=""{category}"" data-material-index=""{m}"" />
+                </div>");
+        }
+        return new Microsoft.AspNetCore.Html.HtmlString(content.ToString());
+    }
+
+    public Microsoft.AspNetCore.Html.IHtmlContent renderTotalCategoryRows(int rowIndex, List<Diplom.Models.Fields.FieldWorkLogPlanMaterialModel> items, string category) {
+        var content = new System.Text.StringBuilder();
+        int count = items?.Count ?? 1;
+        if (count == 0) count = 1;
+        for (int m = 0; m < count; m++) {
+            var item = (items != null && m < items.Count) ? items[m] : null;
+            content.Append($@"
+                <div class=""total-row mb-1"" data-category=""{category}"" data-material-index=""{m}"">
+                    <input type=""number"" step=""0.01"" name=""models[{rowIndex}].Totals_List[{m}]"" value=""{(item?.Total?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "")}""
+                           class=""form-control form-control-sm total-input"" data-row-index=""{rowIndex}"" data-category=""{category}"" data-material-index=""{m}"" />
+                </div>");
+        }
+        return new Microsoft.AspNetCore.Html.HtmlString(content.ToString());
+    }
+}
+
+@model List<Diplom.Models.Fields.FieldWorkLogPlanModel>
+@inject Microsoft.AspNetCore.Mvc.Localization.IViewLocalizer Localizer
+
+@{
+    ViewData["Title"] = Localizer["Field Work LogPlan"].Value;
+    int newIndex = Model?.Count ?? 0;
+
+    var fields = ViewBag.Fields as IEnumerable<Diplom.Models.Fields.FieldEntity> ?? Enumerable.Empty<Diplom.Models.Fields.FieldEntity>();
+    var operations = ViewBag.Operations as IEnumerable<Diplom.Models.Tools.EncyclopediaItem> ?? Enumerable.Empty<Diplom.Models.Tools.EncyclopediaItem>();
+    var seedTypes = ViewBag.SeedTypes as IEnumerable<Diplom.Models.Tools.EncyclopediaItem> ?? Enumerable.Empty<Diplom.Models.Tools.EncyclopediaItem>();
+
+    var seeds = ViewBag.Seeds as IEnumerable<Diplom.Models.Warehouses.MaterialLogModel> ?? Enumerable.Empty<Diplom.Models.Warehouses.MaterialLogModel>();
+    var pesticides = ViewBag.Pesticides as IEnumerable<Diplom.Models.Warehouses.MaterialLogModel> ?? Enumerable.Empty<Diplom.Models.Warehouses.MaterialLogModel>();
+    var fertilizers = ViewBag.Fertilizers as IEnumerable<Diplom.Models.Warehouses.MaterialLogModel> ?? Enumerable.Empty<Diplom.Models.Warehouses.MaterialLogModel>();
+
+    var operators = ViewBag.Operators as IEnumerable<Diplom.Models.OperatorModel> ?? Enumerable.Empty<Diplom.Models.OperatorModel>();
+    var equipments = ViewBag.Equipments as IEnumerable<Diplom.Models.EquipmentModel> ?? Enumerable.Empty<Diplom.Models.EquipmentModel>();
+}
+
+<link href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" rel="stylesheet" />
+
+<style>
+    .select-required-missing {
+        border-color: #fd7e14 !important;
+        background-color: #fff3cd !important;
+        box-shadow: 0 0 0 0.15rem rgba(253, 126, 20, 0.25) !important;
+    }
+
+
+    .tab-content {
+        display: none;
+    }
+
+    .tab-content.active {
+        display: block;
+    }
+
+    .nav-tabs .nav-link {
+        cursor: pointer;
+    }
+
+    .nav-tabs .nav-link.active {
+        font-weight: 600;
+    }
+
+    .toggle-switch {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+
+    .toggle-switch label {
+        font-weight: 500;
+        cursor: pointer;
+    }
+
+    .toggle-switch input[type="checkbox"] {
+        width: 50px;
+        height: 26px;
+        appearance: none;
+        background: #ccc;
+        border-radius: 13px;
+        position: relative;
+        cursor: pointer;
+        transition: background 0.3s;
+    }
+
+    .toggle-switch input[type="checkbox"]:checked {
+        background: #0d6efd;
+    }
+
+    .toggle-switch input[type="checkbox"]::before {
+        content: '';
+        position: absolute;
+        width: 22px;
+        height: 22px;
+        background: white;
+        border-radius: 50%;
+        top: 2px;
+        left: 2px;
+        transition: transform 0.3s;
+    }
+
+    .toggle-switch input[type="checkbox"]:checked::before {
+        transform: translateX(24px);
+    }
+
+    .fact-stock-warning {
+        display: none;
+    }
+</style>
+
+<div class="container-fluid mt-4">
+    <h2 class="mb-3 text-center">@Localizer["Field Work Log"]</h2>
+
+    <div class="toggle-switch justify-content-center" data-allow-view-mode-action="true">
+        <label>@Localizer["Plan"]</label>
+        <input type="checkbox" id="plan-fact-toggle" onchange="switchTab(this.checked ? 'fact' : 'plan')" />
+        <label>@Localizer["Fact"]</label>
+    </div>
+
+    @if (TempData["FactStockError"] != null)
+    {
+        <div class="alert alert-danger text-center">
+            @TempData["FactStockError"]
+        </div>
+    }
+
+    <div id="fact-stock-warning" class="alert alert-danger text-center fact-stock-warning">
+        @Localizer["Not enough materials or fuel in warehouse."]
+    </div>
+
+    @if (ViewBag.SelectedTab == "fact")
+    {
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const toggle = document.getElementById('plan-fact-toggle');
+                if (toggle) {
+                    toggle.checked = true;
+                    switchTab('fact');
+                }
+            });
+        </script>
+    }
+
+    <div id="plan-content" class="tab-content active">
+        <form action="@Url.Action("SaveFieldWorkLogPlan", "Fields")" method="post">
+        @Html.AntiForgeryToken()
+
+        <div class="material-rows-data-container d-none"
+             data-seedtypes='@System.Text.Json.JsonSerializer.Serialize(seedTypes ?? new List<Diplom.Models.Tools.EncyclopediaItem>())'
+             data-pesticidetypes='@System.Text.Json.JsonSerializer.Serialize((ViewBag.PesticideTypes as List<Diplom.Models.Tools.EncyclopediaItem>) ?? new List<Diplom.Models.Tools.EncyclopediaItem>())'
+             data-fertilizertypes='@System.Text.Json.JsonSerializer.Serialize((ViewBag.FertilizerTypes as List<Diplom.Models.Tools.EncyclopediaItem>) ?? new List<Diplom.Models.Tools.EncyclopediaItem>())'
+             data-seeds='@System.Text.Json.JsonSerializer.Serialize(seeds ?? new List<Diplom.Models.Warehouses.MaterialLogModel>())'
+             data-pesticides='@System.Text.Json.JsonSerializer.Serialize(pesticides ?? new List<Diplom.Models.Warehouses.MaterialLogModel>())'
+             data-fertilizers='@System.Text.Json.JsonSerializer.Serialize(fertilizers ?? new List<Diplom.Models.Warehouses.MaterialLogModel>())'
+             data-fuel='@System.Text.Json.JsonSerializer.Serialize((ViewBag.Fuel as List<Diplom.Models.Warehouses.MaterialLogModel>) ?? new List<Diplom.Models.Warehouses.MaterialLogModel>())'>
+        </div>
+
+        <table class="table table-bordered table-sm text-center align-middle field-worklog-table">
+            <thead class="table-light">
+                <tr>
+                    <th>&#8470;</th>
+                    <th>@Localizer["Operation"]</th>
+                    <th>@Localizer["Date"]</th>
+                    <th>@Localizer["Field"]</th>
+                    <th>@Localizer["Area"] (@Localizer["ha"])</th>
+                    <th>@Localizer["Materials"]</th>
+                    <th>@Localizer["Rate (kg/ha)"]</th>
+                    <th>@Localizer["Total"]</th>
+                    <th>@Localizer["Fuel Rate"]</th>
+                    <th>@Localizer["Fuel Total"]</th>
+                    <th>@Localizer["Aggregate"]</th>
+                    <th>@Localizer["Mechanic"]</th>
+                    <th>@Localizer["Last Modified"]</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    for (int i = 0; i < Model.Count; i++)
+                    {
+                        var row = Model[i];
+                        var materialCount = row.Materials?.Count ?? 0;
+                        var aggregateCount = row.Aggregates?.Count ?? 0;
+
+                        <tr>
+                            <td>@(i + 1)</td>
+                            <input type="hidden" name="models[@i].Id" value="@row.Id" />
+
+                            <td>
+                                <select name="models[@i].OperationId" class="form-control form-control-sm" required>
+                                    <option value="">-- @Localizer["Select operation"] --</option>
+                                    @foreach (var op in operations)
+                                    {
+                                        <option value="@op.Id" selected="@(op.Id == row.OperationId)">@op.Name</option>
+                                    }
+                                </select>
+                            </td>
+
+                            <td>
+                                <input type="text" class="form-control form-control-sm date-range" placeholder="@Localizer["Select date range"]"
+                                       data-row-index="@i"
+                                       value="@(row.PlanFrom != null && row.PlanTo != null ? row.PlanFrom.Value.ToString("yyyy-MM-dd") + " to " + row.PlanTo.Value.ToString("yyyy-MM-dd") : "")" />
+                                <input type="hidden" name="models[@i].PlanFrom" id="planFrom_@i" value="@(row.PlanFrom?.ToString("yyyy-MM-dd") ?? "")" />
+                                <input type="hidden" name="models[@i].PlanTo" id="planTo_@i" value="@(row.PlanTo?.ToString("yyyy-MM-dd") ?? "")" />
+                            </td>
+
+                            <td>
+                                <select name="models[@i].FieldId" class="form-control form-control-sm field-select" data-row-index="@i" required>
+                                    <option value="">-- @Localizer["Select field"] --</option>
+                                    @foreach (var f in fields)
+                                    {
+                                        <option value="@f.Id"
+                                                data-area="@f.AreaHectares.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                                                selected="@(f.Id == row.FieldId)">
+                                            @f.Name
+                                        </option>
+                                    }
+                                </select>
+                            </td>
+
+                            <td>
+                                <input type="number" step="0.01" name="models[@i].AreaHectares" value="@row.AreaHectares"
+                                       class="form-control form-control-sm area-input" data-row-index="@i" />
+                            </td>
+
+                            <td>
+                                @{
+                                    var seedMat = row.Materials?.Where(m => m.ArchivedAt == null && m.Category == "Seeds").OrderByDescending(x => x.LastModified).FirstOrDefault();
+                                    var pestMats = row.Materials?.Where(m => m.ArchivedAt == null && m.Category == "Pesticides").OrderByDescending(x => x.LastModified).ToList() ?? new List<Diplom.Models.Fields.FieldWorkLogPlanMaterialModel>();
+                                    var fertMats = row.Materials?.Where(m => m.ArchivedAt == null && m.Category == "Fertilizers").OrderByDescending(x => x.LastModified).ToList() ?? new List<Diplom.Models.Fields.FieldWorkLogPlanMaterialModel>();
+                                    if (pestMats.Count == 0) pestMats.Add(new Diplom.Models.Fields.FieldWorkLogPlanMaterialModel { Category = "Pesticides" });
+                                    if (fertMats.Count == 0) fertMats.Add(new Diplom.Models.Fields.FieldWorkLogPlanMaterialModel { Category = "Fertilizers" });
+
+                                    var idx = 0;
+                                }
+
+                                <div class="material-rows" data-row-index="@i">
+                                    <div class="material-row mb-1" data-material-index="@idx" data-category="Seeds">
+                                        <div class="input-group input-group-sm">
+                                            <input type="hidden" name="models[@i].MaterialRowIds_List[@idx]" value="@(seedMat?.Id ?? 0)" />
+                                            <input type="hidden" name="models[@i].MaterialCategories_List[@idx]" value="Seeds" class="material-category" />
+                                            <input type="hidden" name="models[@i].SeedTypeIds_List[@idx]" value="@(seedMat?.SeedTypeId?.ToString() ?? "")" class="seedtype-id" />
+                                            <input type="hidden" name="models[@i].MaterialIds_List[@idx]" value="@(seedMat?.MaterialId?.ToString() ?? "")" class="material-id" />
+                                            <div class="cascading-select form-control form-control-sm worklog-material-select"
+                                                 data-row-index="@i" data-material-index="@idx"
+                                                 data-category="Seeds"
+                                                 data-seedtype="@(seedMat?.SeedTypeId?.ToString() ?? "")"
+                                                 data-materialid="@(seedMat?.MaterialId?.ToString() ?? "")"
+                                                 data-placeholder="@Localizer["Select Seeds"]"></div>
+                                            <div class="input-group-append d-flex material-btn-spacer"></div>
+                                        </div>
+                                    </div>
+                                    @{ idx++; }
+
+                                    @for (int pm = 0; pm < pestMats.Count; pm++)
+                                    {
+                                        var m = pestMats[pm];
+                                        <div class="material-row mb-1" data-material-index="@idx" data-category="Pesticides">
+                                            <div class="input-group input-group-sm">
+                                                <input type="hidden" name="models[@i].MaterialRowIds_List[@idx]" value="@(m.Id)" />
+                                                <input type="hidden" name="models[@i].MaterialCategories_List[@idx]" value="Pesticides" class="material-category" />
+                                                <input type="hidden" name="models[@i].SeedTypeIds_List[@idx]" value="@(m.SeedTypeId?.ToString() ?? "")" class="seedtype-id" />
+                                                <input type="hidden" name="models[@i].MaterialIds_List[@idx]" value="@(m.MaterialId?.ToString() ?? "")" class="material-id" />
+                                                <div class="cascading-select form-control form-control-sm worklog-material-select"
+                                                     data-row-index="@i" data-material-index="@idx"
+                                                     data-category="Pesticides"
+                                                     data-seedtype="@(m.SeedTypeId?.ToString() ?? "")"
+                                                     data-materialid="@(m.MaterialId?.ToString() ?? "")"
+                                                     data-placeholder="@Localizer["Select Pesticides"]"></div>
+                                                <div class="input-group-append d-flex">
+                                                    <button type="button" class="btn btn-outline-primary btn-sm add-material" data-row-index="@i" data-category="Pesticides">+</button>
+                                                    <button type="button" class="btn btn-outline-danger btn-sm remove-material" data-row-index="@i" data-material-index="@idx">&times;</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        idx++;
+                                    }
+
+                                    @for (int fm = 0; fm < fertMats.Count; fm++)
+                                    {
+                                        var m = fertMats[fm];
+                                        <div class="material-row mb-1" data-material-index="@idx" data-category="Fertilizers">
+                                            <div class="input-group input-group-sm">
+                                                <input type="hidden" name="models[@i].MaterialRowIds_List[@idx]" value="@(m.Id)" />
+                                                <input type="hidden" name="models[@i].MaterialCategories_List[@idx]" value="Fertilizers" class="material-category" />
+                                                <input type="hidden" name="models[@i].SeedTypeIds_List[@idx]" value="@(m.SeedTypeId?.ToString() ?? "")" class="seedtype-id" />
+                                                <input type="hidden" name="models[@i].MaterialIds_List[@idx]" value="@(m.MaterialId?.ToString() ?? "")" class="material-id" />
+                                                <div class="cascading-select form-control form-control-sm worklog-material-select"
+                                                     data-row-index="@i" data-material-index="@idx"
+                                                     data-category="Fertilizers"
+                                                     data-seedtype="@(m.SeedTypeId?.ToString() ?? "")"
+                                                     data-materialid="@(m.MaterialId?.ToString() ?? "")"
+                                                     data-placeholder="@Localizer["Select Fertilizers"]"></div>
+                                                <div class="input-group-append d-flex">
+                                                    <button type="button" class="btn btn-outline-primary btn-sm add-material" data-row-index="@i" data-category="Fertilizers">+</button>
+                                                    <button type="button" class="btn btn-outline-danger btn-sm remove-material" data-row-index="@i" data-material-index="@idx">&times;</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        idx++;
+                                    }
+                                </div>
+                            </td>
+
+                            <td>
+                                <div class="rate-rows" data-row-index="@i">
+                                    @{
+                                        var idxR = 0;
+                                    }
+                                    <div class="rate-row mb-1" data-material-index="@idxR">
+                                        <input type="number" step="0.01" name="models[@i].Rates_List[@idxR]" value="@(seedMat?.Rate)"
+                                               class="form-control form-control-sm rate-input" data-row-index="@i" data-material-index="@idxR" />
+                                    </div>
+                                    @{ idxR++; }
+
+                                    @for (int pm = 0; pm < pestMats.Count; pm++)
+                                    {
+                                        var m = pestMats[pm];
+                                        <div class="rate-row mb-1" data-material-index="@idxR">
+                                            <input type="number" step="0.01" name="models[@i].Rates_List[@idxR]" value="@(m.Rate)"
+                                                   class="form-control form-control-sm rate-input" data-row-index="@i" data-material-index="@idxR" />
+                                        </div>
+                                        idxR++;
+                                    }
+
+                                    @for (int fm = 0; fm < fertMats.Count; fm++)
+                                    {
+                                        var m = fertMats[fm];
+                                        <div class="rate-row mb-1" data-material-index="@idxR">
+                                            <input type="number" step="0.01" name="models[@i].Rates_List[@idxR]" value="@(m.Rate)"
+                                                   class="form-control form-control-sm rate-input" data-row-index="@i" data-material-index="@idxR" />
+                                        </div>
+                                        idxR++;
+                                    }
+                                </div>
+                            </td>
+
+                            <td>
+                                <div class="total-rows" data-row-index="@i">
+                                    @{
+                                        var idxT = 0;
+                                    }
+                                    <div class="total-row mb-1" data-material-index="@idxT">
+                                        <input type="number" step="0.01" name="models[@i].Totals_List[@idxT]" value="@(seedMat?.Total)"
+                                               class="form-control form-control-sm total-input" data-row-index="@i" data-material-index="@idxT" />
+                                    </div>
+                                    @{ idxT++; }
+
+                                    @for (int pm = 0; pm < pestMats.Count; pm++)
+                                    {
+                                        var m = pestMats[pm];
+                                        <div class="total-row mb-1" data-material-index="@idxT">
+                                            <input type="number" step="0.01" name="models[@i].Totals_List[@idxT]" value="@(m.Total)"
+                                                   class="form-control form-control-sm total-input" data-row-index="@i" data-material-index="@idxT" />
+                                        </div>
+                                        idxT++;
+                                    }
+
+                                    @for (int fm = 0; fm < fertMats.Count; fm++)
+                                    {
+                                        var m = fertMats[fm];
+                                        <div class="total-row mb-1" data-material-index="@idxT">
+                                            <input type="number" step="0.01" name="models[@i].Totals_List[@idxT]" value="@(m.Total)"
+                                                   class="form-control form-control-sm total-input" data-row-index="@i" data-material-index="@idxT" />
+                                        </div>
+                                        idxT++;
+                                    }
+                                </div>
+                            </td>
+
+                            <td>
+                                <input type="number" step="0.01" name="models[@i].FuelRate" value="@row.FuelRate" class="form-control form-control-sm fuel-rate" data-row-index="@i" />
+                            </td>
+
+                            <td>
+                                <input type="number" step="0.01" name="models[@i].FuelTotal" value="@row.FuelTotal" class="form-control form-control-sm fuel-total" data-row-index="@i" />
+                            </td>
+
+                            <td>
+                                <div class="aggregate-rows" data-row-index="@i"
+                                     data-equipments='@System.Text.Json.JsonSerializer.Serialize(equipments ?? new List<Diplom.Models.EquipmentModel>())'>
+
+                                    @if (row.Aggregates != null && row.Aggregates.Any())
+                                    {
+                                        for (int a = 0; a < row.Aggregates.Count; a++)
+                                        {
+                                            var ag = row.Aggregates[a];
+                                            <div class="aggregate-row mb-1" data-aggregate-index="@a">
+                                                <div class="input-group input-group-sm">
+                                                    <input type="hidden" name="models[@i].AggregateRowIds_List[@a]" value="@ag.Id" />
+                                                    <input type="hidden" name="models[@i].AggregateEquipmentTypes_List[@a]" value="@((int?)ag.EquipmentType)" class="aggregate-type-input" />
+                                                    <input type="hidden" name="models[@i].AggregateEquipmentIds_List[@a]" value="@ag.EquipmentId" class="aggregate-equipment-id-input" />
+
+                                                    <div class="cascading-select form-control form-control-sm worklog-aggregate-select"
+                                                         data-row-index="@i" data-aggregate-index="@a"
+                                                         data-equipmenttype="@((int?)ag.EquipmentType)" data-equipmentid="@ag.EquipmentId"
+                                                         data-placeholder="@Localizer["Select equipment"]"></div>
+
+                                                    <div class="input-group-append d-flex">
+                                                        <button type="button" class="btn btn-outline-primary btn-sm add-aggregate" data-row-index="@i">+</button>
+                                                        <button type="button" class="btn btn-outline-danger btn-sm remove-aggregate" data-row-index="@i" data-aggregate-index="@a">&times;</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <div class="aggregate-row mb-1" data-aggregate-index="0">
+                                            <div class="input-group input-group-sm">
+                                                <input type="hidden" name="models[@i].AggregateRowIds_List[0]" value="0" />
+                                                <input type="hidden" name="models[@i].AggregateEquipmentTypes_List[0]" value="" class="aggregate-type-input" />
+                                                <input type="hidden" name="models[@i].AggregateEquipmentIds_List[0]" value="" class="aggregate-equipment-id-input" />
+
+                                                <div class="cascading-select form-control form-control-sm worklog-aggregate-select"
+                                                     data-row-index="@i" data-aggregate-index="0"
+                                                     data-equipmenttype="" data-equipmentid=""
+                                                     data-placeholder="@Localizer["Select equipment"]"></div>
+
+                                                <div class="input-group-append d-flex">
+                                                    <button type="button" class="btn btn-outline-primary btn-sm add-aggregate" data-row-index="@i">+</button>
+                                                    <button type="button" class="btn btn-outline-danger btn-sm remove-aggregate" data-row-index="@i" data-aggregate-index="0">&times;</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </td>
+
+                            <td>
+                                <select name="models[@i].MechanicId" class="form-control form-control-sm" required>
+                                    <option value="">-- @Localizer["Select"] --</option>
+                                    @foreach (var o in operators)
+                                    {
+                                        var name = $"{o.LastName} {o.FirstName} {o.Surname}".Trim();
+                                        <option value="@o.Id" selected="@(o.Id == row.MechanicId)">@name</option>
+                                    }
+                                </select>
+                            </td>
+
+                            <td>
+                                @row.LastModified.ToLocalTime().ToString("dd.MM.yyyy HH:mm")
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+
+            <tfoot>
+                <tr class="new-entry-row">
+                    <td>+</td>
+                    <input type="hidden" name="models[@newIndex].Id" value="0" />
+
+                    <td>
+                        <select name="models[@newIndex].OperationId" class="form-control form-control-sm">
+                            <option value="">-- @Localizer["Select operation"] --</option>
+                            @foreach (var op in operations)
+                            {
+                                <option value="@op.Id">@op.Name</option>
+                            }
+                        </select>
+                    </td>
+                    <td>
+                        <input type="text" class="form-control form-control-sm date-range" placeholder="@Localizer["Select date range"]"
+                               data-row-index="@newIndex" />
+                        <input type="hidden" name="models[@newIndex].PlanFrom" id="planFrom_@newIndex" value="" />
+                        <input type="hidden" name="models[@newIndex].PlanTo" id="planTo_@newIndex" value="" />
+                    </td>
+                    <td>
+                        <select name="models[@newIndex].FieldId" class="form-control form-control-sm field-select" data-row-index="@newIndex">
+                            <option value="">-- @Localizer["Select field"] --</option>
+                            @foreach (var f in fields)
+                            {
+                                <option value="@f.Id" data-area="@f.AreaHectares">@f.Name (@f.AreaHectares @Localizer["ha"])</option>
+                            }
+                        </select>
+                    </td>
+                    <td>
+                        <input type="number" step="0.01" name="models[@newIndex].AreaHectares" class="form-control form-control-sm area-input" data-row-index="@newIndex" />
+                    </td>
+                    <td>
+                        <div class="material-rows" data-row-index="@newIndex">
+                            <div class="material-row mb-1" data-material-index="0" data-category="Seeds">
+                                <div class="input-group input-group-sm">
+                                    <input type="hidden" name="models[@newIndex].MaterialRowIds_List[0]" value="0" />
+                                    <input type="hidden" name="models[@newIndex].MaterialCategories_List[0]" value="Seeds" class="material-category" />
+                                    <input type="hidden" name="models[@newIndex].SeedTypeIds_List[0]" value="" class="seedtype-id" />
+                                    <input type="hidden" name="models[@newIndex].MaterialIds_List[0]" value="" class="material-id" />
+                                    <div class="cascading-select form-control form-control-sm worklog-material-select"
+                                         data-row-index="@newIndex" data-material-index="0"
+                                         data-category="Seeds" data-seedtype="" data-materialid=""
+                                         data-placeholder="@Localizer["Select Seeds"]"></div>
+                                    <div class="input-group-append d-flex material-btn-spacer"></div>
+                                </div>
+                            </div>
+
+                            <div class="material-row mb-1" data-material-index="1" data-category="Pesticides">
+                                <div class="input-group input-group-sm">
+                                    <input type="hidden" name="models[@newIndex].MaterialRowIds_List[1]" value="0" />
+                                    <input type="hidden" name="models[@newIndex].MaterialCategories_List[1]" value="Pesticides" class="material-category" />
+                                    <input type="hidden" name="models[@newIndex].SeedTypeIds_List[1]" value="" class="seedtype-id" />
+                                    <input type="hidden" name="models[@newIndex].MaterialIds_List[1]" value="" class="material-id" />
+                                    <div class="cascading-select form-control form-control-sm worklog-material-select"
+                                         data-row-index="@newIndex" data-material-index="1"
+                                         data-category="Pesticides" data-seedtype="" data-materialid=""
+                                         data-placeholder="@Localizer["Select Pesticides"]"></div>
+                                    <div class="input-group-append d-flex">
+                                        <button type="button" class="btn btn-outline-primary btn-sm add-material" data-row-index="@newIndex" data-category="Pesticides">+</button>
+                                        <button type="button" class="btn btn-outline-danger btn-sm remove-material" data-row-index="@newIndex" data-material-index="1">&times;</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="material-row mb-1" data-material-index="2" data-category="Fertilizers">
+                                <div class="input-group input-group-sm">
+                                    <input type="hidden" name="models[@newIndex].MaterialRowIds_List[2]" value="0" />
+                                    <input type="hidden" name="models[@newIndex].MaterialCategories_List[2]" value="Fertilizers" class="material-category" />
+                                    <input type="hidden" name="models[@newIndex].SeedTypeIds_List[2]" value="" class="seedtype-id" />
+                                    <input type="hidden" name="models[@newIndex].MaterialIds_List[2]" value="" class="material-id" />
+                                    <div class="cascading-select form-control form-control-sm worklog-material-select"
+                                         data-row-index="@newIndex" data-material-index="2"
+                                         data-category="Fertilizers" data-seedtype="" data-materialid=""
+                                         data-placeholder="@Localizer["Select Fertilizers"]"></div>
+                                    <div class="input-group-append d-flex">
+                                        <button type="button" class="btn btn-outline-primary btn-sm add-material" data-row-index="@newIndex" data-category="Fertilizers">+</button>
+                                        <button type="button" class="btn btn-outline-danger btn-sm remove-material" data-row-index="@newIndex" data-material-index="2">&times;</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="rate-rows" data-row-index="@newIndex">
+                            <div class="rate-row mb-1" data-material-index="0">
+                                <input type="number" step="0.01" name="models[@newIndex].Rates_List[0]"
+                                       class="form-control form-control-sm rate-input" data-row-index="@newIndex" data-material-index="0" />
+                            </div>
+                            <div class="rate-row mb-1" data-material-index="1">
+                                <input type="number" step="0.01" name="models[@newIndex].Rates_List[1]"
+                                       class="form-control form-control-sm rate-input" data-row-index="@newIndex" data-material-index="1" />
+                            </div>
+                            <div class="rate-row mb-1" data-material-index="2">
+                                <input type="number" step="0.01" name="models[@newIndex].Rates_List[2]"
+                                       class="form-control form-control-sm rate-input" data-row-index="@newIndex" data-material-index="2" />
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="total-rows" data-row-index="@newIndex">
+                            <div class="total-row mb-1" data-material-index="0">
+                                <input type="number" step="0.01" name="models[@newIndex].Totals_List[0]"
+                                       class="form-control form-control-sm total-input" data-row-index="@newIndex" data-material-index="0" />
+                            </div>
+                            <div class="total-row mb-1" data-material-index="1">
+                                <input type="number" step="0.01" name="models[@newIndex].Totals_List[1]"
+                                       class="form-control form-control-sm total-input" data-row-index="@newIndex" data-material-index="1" />
+                            </div>
+                            <div class="total-row mb-1" data-material-index="2">
+                                <input type="number" step="0.01" name="models[@newIndex].Totals_List[2]"
+                                       class="form-control form-control-sm total-input" data-row-index="@newIndex" data-material-index="2" />
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <input type="number" step="0.01" name="models[@newIndex].FuelRate" class="form-control form-control-sm fuel-rate" data-row-index="@newIndex" />
+                    </td>
+                    <td>
+                        <input type="number" step="0.01" name="models[@newIndex].FuelTotal" class="form-control form-control-sm fuel-total" data-row-index="@newIndex" />
+                    </td>
+                    <td>
+                        <div class="aggregate-rows" data-row-index="@newIndex"
+                             data-equipments='@System.Text.Json.JsonSerializer.Serialize(equipments ?? new List<Diplom.Models.EquipmentModel>())'>
+                            <div class="aggregate-row mb-1" data-aggregate-index="0">
+                                <div class="input-group input-group-sm">
+                                    <input type="hidden" name="models[@newIndex].AggregateRowIds_List[0]" value="0" />
+                                    <input type="hidden" name="models[@newIndex].AggregateEquipmentTypes_List[0]" value="" class="aggregate-type-input" />
+                                    <input type="hidden" name="models[@newIndex].AggregateEquipmentIds_List[0]" value="" class="aggregate-equipment-id-input" />
+                                    <div class="cascading-select form-control form-control-sm worklog-aggregate-select"
+                                         data-row-index="@newIndex" data-aggregate-index="0"
+                                         data-equipmenttype="" data-equipmentid=""
+                                         data-placeholder="@Localizer["Select equipment"]"></div>
+                                    <div class="input-group-append d-flex">
+                                        <button type="button" class="btn btn-outline-primary btn-sm add-aggregate" data-row-index="@newIndex">+</button>
+                                        <button type="button" class="btn btn-outline-danger btn-sm remove-aggregate" data-row-index="@newIndex" data-aggregate-index="0">&times;</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <select name="models[@newIndex].MechanicId" class="form-control form-control-sm">
+                            <option value="">-- @Localizer["Select mechanic"] --</option>
+                            @foreach (var op in operators)
+                            {
+                                <option value="@op.Id">@op.LastName @op.FirstName @op.Surname</option>
+                            }
+                        </select>
+                    </td>
+                    <td>-</td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <div class="mt-3 text-end">
+            <button type="submit" class="btn btn-primary">@Localizer["Save"]</button>
+        </div>
+    </form>
+    </div>
+
+    <div id="fact-content" class="tab-content">
+        <form action="@Url.Action("SaveFieldWorkLog", "Fields")" method="post">
+        @Html.AntiForgeryToken()
+        @{
+            var factRows = (ViewBag.FieldWorkLogs as List<Diplom.Models.Fields.FieldWorkLogModel>) ?? new List<Diplom.Models.Fields.FieldWorkLogModel>();
+            var factNewIndex = factRows.Count;
+        }
+
+        <div class="material-rows-data-container d-none"
+             data-seedtypes='@System.Text.Json.JsonSerializer.Serialize(seedTypes ?? new List<Diplom.Models.Tools.EncyclopediaItem>())'
+             data-pesticidetypes='@System.Text.Json.JsonSerializer.Serialize((ViewBag.PesticideTypes as List<Diplom.Models.Tools.EncyclopediaItem>) ?? new List<Diplom.Models.Tools.EncyclopediaItem>())'
+             data-fertilizertypes='@System.Text.Json.JsonSerializer.Serialize((ViewBag.FertilizerTypes as List<Diplom.Models.Tools.EncyclopediaItem>) ?? new List<Diplom.Models.Tools.EncyclopediaItem>())'
+             data-seeds='@System.Text.Json.JsonSerializer.Serialize(seeds ?? new List<Diplom.Models.Warehouses.MaterialLogModel>())'
+             data-pesticides='@System.Text.Json.JsonSerializer.Serialize(pesticides ?? new List<Diplom.Models.Warehouses.MaterialLogModel>())'
+             data-fertilizers='@System.Text.Json.JsonSerializer.Serialize(fertilizers ?? new List<Diplom.Models.Warehouses.MaterialLogModel>())'
+             data-fuel='@System.Text.Json.JsonSerializer.Serialize((ViewBag.Fuel as List<Diplom.Models.Warehouses.MaterialLogModel>) ?? new List<Diplom.Models.Warehouses.MaterialLogModel>())'>
+        </div>
+
+        <table class="table table-bordered table-sm text-center align-middle field-worklog-table">
+            <thead class="table-light">
+                <tr>
+                    <th>&#8470;</th>
+                    <th>@Localizer["Operation"]</th>
+                    <th>@Localizer["Date"]</th>
+                    <th>@Localizer["Field"]</th>
+                    <th>@Localizer["Area"] @Localizer["ha"])</th>
+                    <th>@Localizer["Materials"]</th>
+                    <th>@Localizer["Rate (kg/ha)"]</th>
+                    <th>@Localizer["Total"]</th>
+                    <th>@Localizer["Fuel Rate"]</th>
+                    <th>@Localizer["Fuel Total"]</th>
+                    <th>@Localizer["Aggregate"]</th>
+                    <th>@Localizer["Mechanic"]</th>
+                    <th>@Localizer["Last Modified"]</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @if (factRows.Any())
+                {
+                        for (int i = 0; i < factRows.Count; i++)
+                        {
+                            var row = factRows[i];
+                            var materialCount = row.Materials?.Count ?? 0;
+                            var aggregateCount = row.Aggregates?.Count ?? 0;
+
+                            <tr>
+                                <td>@(i + 1)</td>
+                                <input type="hidden" name="factModels[@i].Id" value="@row.Id" />
+
+                                <td>
+                                    <select name="factModels[@i].OperationId" class="form-control form-control-sm" required>
+                                        <option value="">-- @Localizer["Select operation"] --</option>
+                                        @foreach (var op in operations)
+                                        {
+                                            <option value="@op.Id" selected="@(op.Id == row.OperationId)">@op.Name</option>
+                                        }
+                                    </select>
+                                </td>
+
+                                <td>
+                                    <input type="text" class="form-control form-control-sm date-range" placeholder="@Localizer["Select date range"]"
+                                           data-row-index="@i"
+                                           value="@(row.PlanFrom != null && row.PlanTo != null ? row.PlanFrom.Value.ToString("yyyy-MM-dd") + " to " + row.PlanTo.Value.ToString("yyyy-MM-dd") : "")" />
+                                    <input type="hidden" name="factModels[@i].PlanFrom" id="factPlanFrom_@i" value="@(row.PlanFrom?.ToString("yyyy-MM-dd") ?? "")" />
+                                    <input type="hidden" name="factModels[@i].PlanTo" id="factPlanTo_@i" value="@(row.PlanTo?.ToString("yyyy-MM-dd") ?? "")" />
+                                </td>
+
+                                <td>
+                                    <select name="factModels[@i].FieldId" class="form-control form-control-sm field-select" data-row-index="@i" required>
+                                        <option value="">-- @Localizer["Select field"] --</option>
+                                        @foreach (var f in fields)
+                                        {
+                                            <option value="@f.Id"
+                                                    data-area="@f.AreaHectares.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                                                    selected="@(f.Id == row.FieldId)">
+                                                @f.Name
+                                            </option>
+                                        }
+                                    </select>
+                                </td>
+
+                                <td>
+                                    <input type="number" step="0.01" name="factModels[@i].AreaHectares" value="@row.AreaHectares"
+                                           class="form-control form-control-sm area-input" data-row-index="@i" />
+                                </td>
+
+                                <td>
+                                    @{
+                                        var seedMat = row.Materials?.Where(m => m.ArchivedAt == null && m.Category == "Seeds").OrderByDescending(x => x.LastModified).FirstOrDefault();
+                                        var pestMats = row.Materials?.Where(m => m.ArchivedAt == null && m.Category == "Pesticides").OrderByDescending(x => x.LastModified).ToList() ?? new List<Diplom.Models.Fields.FieldWorkLogMaterialModel>();
+                                        var fertMats = row.Materials?.Where(m => m.ArchivedAt == null && m.Category == "Fertilizers").OrderByDescending(x => x.LastModified).ToList() ?? new List<Diplom.Models.Fields.FieldWorkLogMaterialModel>();
+                                        if (pestMats.Count == 0) pestMats.Add(new Diplom.Models.Fields.FieldWorkLogMaterialModel { Category = "Pesticides" });
+                                        if (fertMats.Count == 0) fertMats.Add(new Diplom.Models.Fields.FieldWorkLogMaterialModel { Category = "Fertilizers" });
+
+                                        var idx = 0;
+                                    }
+
+                                    <div class="material-rows" data-row-index="@i">
+                                        <div class="material-row mb-1" data-material-index="@idx" data-category="Seeds">
+                                            <div class="input-group input-group-sm">
+                                                <input type="hidden" name="factModels[@i].MaterialRowIds_List[@idx]" value="@(seedMat?.Id ?? 0)" />
+                                                <input type="hidden" name="factModels[@i].MaterialCategories_List[@idx]" value="Seeds" class="material-category" />
+                                                <input type="hidden" name="factModels[@i].SeedTypeIds_List[@idx]" value="@(seedMat?.SeedTypeId?.ToString() ?? "")" class="seedtype-id" />
+                                                <input type="hidden" name="factModels[@i].MaterialIds_List[@idx]" value="@(seedMat?.MaterialId?.ToString() ?? "")" class="material-id" />
+                                                <div class="cascading-select form-control form-control-sm worklog-material-select"
+                                                     data-row-index="@i" data-material-index="@idx"
+                                                     data-category="Seeds"
+                                                     data-seedtype="@(seedMat?.SeedTypeId?.ToString() ?? "")"
+                                                     data-materialid="@(seedMat?.MaterialId?.ToString() ?? "")"
+                                                     data-placeholder="@Localizer["Select Seeds"]"></div>
+                                                <div class="input-group-append d-flex material-btn-spacer"></div>
+                                            </div>
+                                        </div>
+                                        @{ idx++; }
+
+                                        @for (int pm = 0; pm < pestMats.Count; pm++)
+                                        {
+                                            var m = pestMats[pm];
+                                            <div class="material-row mb-1" data-material-index="@idx" data-category="Pesticides">
+                                                <div class="input-group input-group-sm">
+                                                    <input type="hidden" name="factModels[@i].MaterialRowIds_List[@idx]" value="@(m.Id)" />
+                                                    <input type="hidden" name="factModels[@i].MaterialCategories_List[@idx]" value="Pesticides" class="material-category" />
+                                                    <input type="hidden" name="factModels[@i].SeedTypeIds_List[@idx]" value="@(m.SeedTypeId?.ToString() ?? "")" class="seedtype-id" />
+                                                    <input type="hidden" name="factModels[@i].MaterialIds_List[@idx]" value="@(m.MaterialId?.ToString() ?? "")" class="material-id" />
+                                                    <div class="cascading-select form-control form-control-sm worklog-material-select"
+                                                         data-row-index="@i" data-material-index="@idx"
+                                                         data-category="Pesticides"
+                                                         data-seedtype="@(m.SeedTypeId?.ToString() ?? "")"
+                                                         data-materialid="@(m.MaterialId?.ToString() ?? "")"
+                                                         data-placeholder="@Localizer["Select Pesticides"]"></div>
+                                                    <div class="input-group-append d-flex">
+                                                        <button type="button" class="btn btn-outline-primary btn-sm add-material" data-row-index="@i" data-category="Pesticides">+</button>
+                                                        <button type="button" class="btn btn-outline-danger btn-sm remove-material" data-row-index="@i" data-material-index="@idx">&times;</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            idx++;
+                                        }
+
+                                        @for (int fm = 0; fm < fertMats.Count; fm++)
+                                        {
+                                            var m = fertMats[fm];
+                                            <div class="material-row mb-1" data-material-index="@idx" data-category="Fertilizers">
+                                                <div class="input-group input-group-sm">
+                                                    <input type="hidden" name="factModels[@i].MaterialRowIds_List[@idx]" value="@(m.Id)" />
+                                                    <input type="hidden" name="factModels[@i].MaterialCategories_List[@idx]" value="Fertilizers" class="material-category" />
+                                                    <input type="hidden" name="factModels[@i].SeedTypeIds_List[@idx]" value="@(m.SeedTypeId?.ToString() ?? "")" class="seedtype-id" />
+                                                    <input type="hidden" name="factModels[@i].MaterialIds_List[@idx]" value="@(m.MaterialId?.ToString() ?? "")" class="material-id" />
+                                                    <div class="cascading-select form-control form-control-sm worklog-material-select"
+                                                         data-row-index="@i" data-material-index="@idx"
+                                                         data-category="Fertilizers"
+                                                         data-seedtype="@(m.SeedTypeId?.ToString() ?? "")"
+                                                         data-materialid="@(m.MaterialId?.ToString() ?? "")"
+                                                         data-placeholder="@Localizer["Select Fertilizers"]"></div>
+                                                    <div class="input-group-append d-flex">
+                                                        <button type="button" class="btn btn-outline-primary btn-sm add-material" data-row-index="@i" data-category="Fertilizers">+</button>
+                                                        <button type="button" class="btn btn-outline-danger btn-sm remove-material" data-row-index="@i" data-material-index="@idx">&times;</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            idx++;
+                                        }
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <div class="rate-rows" data-row-index="@i">
+                                        @{
+                                            var idxR = 0;
+                                        }
+                                        <div class="rate-row mb-1" data-material-index="@idxR">
+                                            <input type="number" step="0.01" name="factModels[@i].Rates_List[@idxR]" value="@(seedMat?.Rate)"
+                                                   class="form-control form-control-sm rate-input" data-row-index="@i" data-material-index="@idxR" />
+                                        </div>
+                                        @{ idxR++; }
+
+                                        @for (int pm = 0; pm < pestMats.Count; pm++)
+                                        {
+                                            var m = pestMats[pm];
+                                            <div class="rate-row mb-1" data-material-index="@idxR">
+                                                <input type="number" step="0.01" name="factModels[@i].Rates_List[@idxR]" value="@(m.Rate)"
+                                                       class="form-control form-control-sm rate-input" data-row-index="@i" data-material-index="@idxR" />
+                                            </div>
+                                            idxR++;
+                                        }
+
+                                        @for (int fm = 0; fm < fertMats.Count; fm++)
+                                        {
+                                            var m = fertMats[fm];
+                                            <div class="rate-row mb-1" data-material-index="@idxR">
+                                                <input type="number" step="0.01" name="factModels[@i].Rates_List[@idxR]" value="@(m.Rate)"
+                                                       class="form-control form-control-sm rate-input" data-row-index="@i" data-material-index="@idxR" />
+                                            </div>
+                                            idxR++;
+                                        }
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <div class="total-rows" data-row-index="@i">
+                                        @{
+                                            var idxT = 0;
+                                        }
+                                        <div class="total-row mb-1" data-material-index="@idxT">
+                                            <input type="number" step="0.01" name="factModels[@i].Totals_List[@idxT]" value="@(seedMat?.Total)"
+                                                   class="form-control form-control-sm total-input" data-row-index="@i" data-material-index="@idxT" data-original-total="@(seedMat?.Total?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "0")" />
+                                        </div>
+                                        @{ idxT++; }
+
+                                        @for (int pm = 0; pm < pestMats.Count; pm++)
+                                        {
+                                            var m = pestMats[pm];
+                                            <div class="total-row mb-1" data-material-index="@idxT">
+                                                <input type="number" step="0.01" name="factModels[@i].Totals_List[@idxT]" value="@(m.Total)"
+                                                       class="form-control form-control-sm total-input" data-row-index="@i" data-material-index="@idxT" />
+                                            </div>
+                                            idxT++;
+                                        }
+
+                                        @for (int fm = 0; fm < fertMats.Count; fm++)
+                                        {
+                                            var m = fertMats[fm];
+                                            <div class="total-row mb-1" data-material-index="@idxT">
+                                                <input type="number" step="0.01" name="factModels[@i].Totals_List[@idxT]" value="@(m.Total)"
+                                                       class="form-control form-control-sm total-input" data-row-index="@i" data-material-index="@idxT" />
+                                            </div>
+                                            idxT++;
+                                        }
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <input type="number" step="0.01" name="factModels[@i].FuelRate" value="@row.FuelRate" class="form-control form-control-sm fuel-rate" data-row-index="@i" />
+                                </td>
+
+                                <td>
+                                    <input type="number" step="0.01" name="factModels[@i].FuelTotal" value="@row.FuelTotal" class="form-control form-control-sm fuel-total" data-row-index="@i" data-original-total="@(row.FuelTotal?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "0")" />
+                                </td>
+
+                                <td>
+                                    <div class="aggregate-rows" data-row-index="@i"
+                                         data-equipments='@System.Text.Json.JsonSerializer.Serialize(equipments ?? new List<Diplom.Models.EquipmentModel>())'>
+
+                                        @if (row.Aggregates != null && row.Aggregates.Any())
+                                        {
+                                            for (int a = 0; a < row.Aggregates.Count; a++)
+                                            {
+                                                var ag = row.Aggregates[a];
+                                                <div class="aggregate-row mb-1" data-aggregate-index="@a">
+                                                    <div class="input-group input-group-sm">
+                                                        <input type="hidden" name="factModels[@i].AggregateRowIds_List[@a]" value="@ag.Id" />
+                                                        <input type="hidden" name="factModels[@i].AggregateEquipmentTypes_List[@a]" value="@((int?)ag.EquipmentType)" class="aggregate-type-input" />
+                                                        <input type="hidden" name="factModels[@i].AggregateEquipmentIds_List[@a]" value="@ag.EquipmentId" class="aggregate-equipment-id-input" />
+
+                                                        <div class="cascading-select form-control form-control-sm worklog-aggregate-select"
+                                                             data-row-index="@i" data-aggregate-index="@a"
+                                                             data-equipmenttype="@((int?)ag.EquipmentType)" data-equipmentid="@ag.EquipmentId"
+                                                             data-placeholder="@Localizer["Select equipment"]"></div>
+
+                                                        <div class="input-group-append d-flex">
+                                                            <button type="button" class="btn btn-outline-primary btn-sm add-aggregate" data-row-index="@i">+</button>
+                                                            <button type="button" class="btn btn-outline-danger btn-sm remove-aggregate" data-row-index="@i" data-aggregate-index="@a">&times;</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <div class="aggregate-row mb-1" data-aggregate-index="0">
+                                                <div class="input-group input-group-sm">
+                                                    <input type="hidden" name="factModels[@i].AggregateRowIds_List[0]" value="0" />
+                                                    <input type="hidden" name="factModels[@i].AggregateEquipmentTypes_List[0]" value="" class="aggregate-type-input" />
+                                                    <input type="hidden" name="factModels[@i].AggregateEquipmentIds_List[0]" value="" class="aggregate-equipment-id-input" />
+
+                                                    <div class="cascading-select form-control form-control-sm worklog-aggregate-select"
+                                                         data-row-index="@i" data-aggregate-index="0"
+                                                         data-equipmenttype="" data-equipmentid=""
+                                                         data-placeholder="@Localizer["Select equipment"]"></div>
+
+                                                    <div class="input-group-append d-flex">
+                                                        <button type="button" class="btn btn-outline-primary btn-sm add-aggregate" data-row-index="@i">+</button>
+                                                        <button type="button" class="btn btn-outline-danger btn-sm remove-aggregate" data-row-index="@i" data-aggregate-index="0">&times;</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <select name="factModels[@i].MechanicId" class="form-control form-control-sm" required>
+                                        <option value="">-- @Localizer["Select"] --</option>
+                                        @foreach (var o in operators)
+                                        {
+                                            var name = $"{o.LastName} {o.FirstName} {o.Surname}".Trim();
+                                            <option value="@o.Id" selected="@(o.Id == row.MechanicId)">@name</option>
+                                        }
+                                    </select>
+                                </td>
+
+                                <td>
+                                    @row.LastModified.ToLocalTime().ToString("dd.MM.yyyy HH:mm")
+                                </td>
+                            </tr>
+                        }
+                    }
+            </tbody>
+
+            <tfoot>
+                <tr class="new-entry-row">
+                    <td>+</td>
+                    <input type="hidden" name="factModels[@factNewIndex].Id" value="0" />
+
+                    <td>
+                        <select name="factModels[@factNewIndex].OperationId" class="form-control form-control-sm">
+                            <option value="">-- @Localizer["Select operation"] --</option>
+                            @foreach (var op in operations)
+                            {
+                                <option value="@op.Id">@op.Name</option>
+                            }
+                        </select>
+                    </td>
+                    <td>
+                        <input type="text" class="form-control form-control-sm date-range" placeholder="@Localizer["Select date range"]"
+                               data-row-index="@factNewIndex" />
+                        <input type="hidden" name="factModels[@factNewIndex].PlanFrom" id="factPlanFrom_@factNewIndex" value="" />
+                        <input type="hidden" name="factModels[@factNewIndex].PlanTo" id="factPlanTo_@factNewIndex" value="" />
+                    </td>
+                    <td>
+                        <select name="factModels[@factNewIndex].FieldId" class="form-control form-control-sm field-select" data-row-index="@factNewIndex">
+                            <option value="">-- @Localizer["Select field"] --</option>
+                            @foreach (var f in fields)
+                            {
+                                <option value="@f.Id" data-area="@f.AreaHectares">@f.Name (@f.AreaHectares @Localizer["ha"])</option>
+                            }
+                        </select>
+                    </td>
+                    <td>
+                        <input type="number" step="0.01" name="factModels[@factNewIndex].AreaHectares" class="form-control form-control-sm area-input" data-row-index="@factNewIndex" />
+                    </td>
+                    <td>
+                        <div class="material-rows" data-row-index="@factNewIndex">
+                            <div class="material-row mb-1" data-material-index="0" data-category="Seeds">
+                                <div class="input-group input-group-sm">
+                                    <input type="hidden" name="factModels[@factNewIndex].MaterialRowIds_List[0]" value="0" />
+                                    <input type="hidden" name="factModels[@factNewIndex].MaterialCategories_List[0]" value="Seeds" class="material-category" />
+                                    <input type="hidden" name="factModels[@factNewIndex].SeedTypeIds_List[0]" value="" class="seedtype-id" />
+                                    <input type="hidden" name="factModels[@factNewIndex].MaterialIds_List[0]" value="" class="material-id" />
+                                    <div class="cascading-select form-control form-control-sm worklog-material-select"
+                                         data-row-index="@factNewIndex" data-material-index="0"
+                                         data-category="Seeds" data-seedtype="" data-materialid=""
+                                         data-placeholder="@Localizer["Select Seeds"]"></div>
+                                    <div class="input-group-append d-flex material-btn-spacer"></div>
+                                </div>
+                            </div>
+
+                            <div class="material-row mb-1" data-material-index="1" data-category="Pesticides">
+                                <div class="input-group input-group-sm">
+                                    <input type="hidden" name="factModels[@factNewIndex].MaterialRowIds_List[1]" value="0" />
+                                    <input type="hidden" name="factModels[@factNewIndex].MaterialCategories_List[1]" value="Pesticides" class="material-category" />
+                                    <input type="hidden" name="factModels[@factNewIndex].SeedTypeIds_List[1]" value="" class="seedtype-id" />
+                                    <input type="hidden" name="factModels[@factNewIndex].MaterialIds_List[1]" value="" class="material-id" />
+                                    <div class="cascading-select form-control form-control-sm worklog-material-select"
+                                         data-row-index="@factNewIndex" data-material-index="1"
+                                         data-category="Pesticides" data-seedtype="" data-materialid=""
+                                         data-placeholder="@Localizer["Select Pesticides"]"></div>
+                                    <div class="input-group-append d-flex">
+                                        <button type="button" class="btn btn-outline-primary btn-sm add-material" data-row-index="@factNewIndex" data-category="Pesticides">+</button>
+                                        <button type="button" class="btn btn-outline-danger btn-sm remove-material" data-row-index="@factNewIndex" data-material-index="1">&times;</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="material-row mb-1" data-material-index="2" data-category="Fertilizers">
+                                <div class="input-group input-group-sm">
+                                    <input type="hidden" name="factModels[@factNewIndex].MaterialRowIds_List[2]" value="0" />
+                                    <input type="hidden" name="factModels[@factNewIndex].MaterialCategories_List[2]" value="Fertilizers" class="material-category" />
+                                    <input type="hidden" name="factModels[@factNewIndex].SeedTypeIds_List[2]" value="" class="seedtype-id" />
+                                    <input type="hidden" name="factModels[@factNewIndex].MaterialIds_List[2]" value="" class="material-id" />
+                                    <div class="cascading-select form-control form-control-sm worklog-material-select"
+                                         data-row-index="@factNewIndex" data-material-index="2"
+                                         data-category="Fertilizers" data-seedtype="" data-materialid=""
+                                         data-placeholder="@Localizer["Select Fertilizers"]"></div>
+                                    <div class="input-group-append d-flex">
+                                        <button type="button" class="btn btn-outline-primary btn-sm add-material" data-row-index="@factNewIndex" data-category="Fertilizers">+</button>
+                                        <button type="button" class="btn btn-outline-danger btn-sm remove-material" data-row-index="@factNewIndex" data-material-index="2">&times;</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="rate-rows" data-row-index="@factNewIndex">
+                            <div class="rate-row mb-1" data-material-index="0">
+                                <input type="number" step="0.01" name="factModels[@factNewIndex].Rates_List[0]"
+                                       class="form-control form-control-sm rate-input" data-row-index="@factNewIndex" data-material-index="0" />
+                            </div>
+                            <div class="rate-row mb-1" data-material-index="1">
+                                <input type="number" step="0.01" name="factModels[@factNewIndex].Rates_List[1]"
+                                       class="form-control form-control-sm rate-input" data-row-index="@factNewIndex" data-material-index="1" />
+                            </div>
+                            <div class="rate-row mb-1" data-material-index="2">
+                                <input type="number" step="0.01" name="factModels[@factNewIndex].Rates_List[2]"
+                                       class="form-control form-control-sm rate-input" data-row-index="@factNewIndex" data-material-index="2" />
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="total-rows" data-row-index="@factNewIndex">
+                            <div class="total-row mb-1" data-material-index="0">
+                                <input type="number" step="0.01" name="factModels[@factNewIndex].Totals_List[0]"
+                                       class="form-control form-control-sm total-input" data-row-index="@factNewIndex" data-material-index="0" />
+                            </div>
+                            <div class="total-row mb-1" data-material-index="1">
+                                <input type="number" step="0.01" name="factModels[@factNewIndex].Totals_List[1]"
+                                       class="form-control form-control-sm total-input" data-row-index="@factNewIndex" data-material-index="1" />
+                            </div>
+                            <div class="total-row mb-1" data-material-index="2">
+                                <input type="number" step="0.01" name="factModels[@factNewIndex].Totals_List[2]"
+                                       class="form-control form-control-sm total-input" data-row-index="@factNewIndex" data-material-index="2" />
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <input type="number" step="0.01" name="factModels[@factNewIndex].FuelRate" class="form-control form-control-sm fuel-rate" data-row-index="@factNewIndex" />
+                    </td>
+                    <td>
+                        <input type="number" step="0.01" name="factModels[@factNewIndex].FuelTotal" class="form-control form-control-sm fuel-total" data-row-index="@factNewIndex" />
+                    </td>
+                    <td>
+                        <div class="aggregate-rows" data-row-index="@factNewIndex"
+                             data-equipments='@System.Text.Json.JsonSerializer.Serialize(equipments ?? new List<Diplom.Models.EquipmentModel>())'>
+                            <div class="aggregate-row mb-1" data-aggregate-index="0">
+                                <div class="input-group input-group-sm">
+                                    <input type="hidden" name="factModels[@factNewIndex].AggregateRowIds_List[0]" value="0" />
+                                    <input type="hidden" name="factModels[@factNewIndex].AggregateEquipmentTypes_List[0]" value="" class="aggregate-type-input" />
+                                    <input type="hidden" name="factModels[@factNewIndex].AggregateEquipmentIds_List[0]" value="" class="aggregate-equipment-id-input" />
+                                    <div class="cascading-select form-control form-control-sm worklog-aggregate-select"
+                                         data-row-index="@factNewIndex" data-aggregate-index="0"
+                                         data-equipmenttype="" data-equipmentid=""
+                                         data-placeholder="@Localizer["Select equipment"]"></div>
+                                    <div class="input-group-append d-flex">
+                                        <button type="button" class="btn btn-outline-primary btn-sm add-aggregate" data-row-index="@factNewIndex">+</button>
+                                        <button type="button" class="btn btn-outline-danger btn-sm remove-aggregate" data-row-index="@factNewIndex" data-aggregate-index="0">&times;</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <select name="factModels[@factNewIndex].MechanicId" class="form-control form-control-sm">
+                            <option value="">-- @Localizer["Select mechanic"] --</option>
+                            @foreach (var op in operators)
+                            {
+                                <option value="@op.Id">@op.LastName @op.FirstName @op.Surname</option>
+                            }
+                        </select>
+                    </td>
+                    <td>-</td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <div class="mt-3 text-end">
+            <button type="submit" class="btn btn-primary">@Localizer["Save"]</button>
+        </div>
+    </form>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+    let __activeCascadingDropdown = null;
+    let __activeCascadingPosition = null;
+
+    function switchTab(tab) {
+        const planContent = document.getElementById('plan-content');
+        const factContent = document.getElementById('fact-content');
+
+        if (tab === 'plan') {
+            planContent.classList.add('active');
+            factContent.classList.remove('active');
+            refreshActiveStockHighlights();
+        } else {
+            factContent.classList.add('active');
+            planContent.classList.remove('active');
+
+            
+            setTimeout(() => {
+                factContent.querySelectorAll('.worklog-material-select').forEach(initWorklogMaterialSelect);
+                factContent.querySelectorAll('.worklog-aggregate-select').forEach(initWorklogAggregateSelect);
+                factContent.querySelectorAll('.date-range').forEach(initDateRange);
+                factContent.querySelectorAll('.field-select').forEach(sel => {
+                    sel.addEventListener('change', function () {
+                        const rowIndex = this.dataset.rowIndex;
+                        const area = this.selectedOptions[0]?.dataset?.area;
+                        const areaInput = factContent.querySelector(`.area-input[data-row-index="${rowIndex}"]`);
+                        if (areaInput && area) {
+                            areaInput.value = area;
+                            recalcRowTotals(rowIndex);
+                        }
+                    });
+                });
+                factContent.querySelectorAll('.area-input').forEach(inp => {
+                    inp.addEventListener('input', function () {
+                        recalcRowTotals(this.dataset.rowIndex);
+                    });
+                });
+                factContent.querySelectorAll('.rate-input').forEach(inp => {
+                    inp.addEventListener('input', function () {
+                        const rowIndex = this.dataset.rowIndex;
+                        const materialIndex = this.dataset.materialIndex;
+                        calcMaterialTotal(rowIndex, materialIndex, false);
+                    });
+                });
+                factContent.querySelectorAll('.fuel-rate').forEach(inp => {
+                    inp.addEventListener('input', function () {
+                        calcFuelTotal(this.dataset.rowIndex, false);
+                    });
+                });
+                factContent.querySelectorAll('.area-input').forEach(inp => recalcRowTotals(inp.dataset.rowIndex));
+                refreshActiveStockHighlights();
+            }, 100);
+        }
+    }
+
+    function refreshActiveStockHighlights() {
+        const scope = document.querySelector('.tab-content.active') || document;
+        const rowIndexes = new Set();
+        scope.querySelectorAll('.area-input[data-row-index], .total-input[data-row-index], .fuel-total[data-row-index]').forEach(el => {
+            if (el.dataset.rowIndex != null) {
+                rowIndexes.add(el.dataset.rowIndex);
+            }
+        });
+        rowIndexes.forEach(rowIndex => updateStockHighlightForRow(rowIndex));
+        updateFactSaveButtonState();
+    }
+
+    function updateFactSaveButtonState() {
+        const factContent = document.getElementById('fact-content');
+        const factSaveButton = factContent?.querySelector('.fact-save-btn');
+        if (!factContent || !factSaveButton) return;
+
+        const hasLowStock = factContent.querySelector('.stock-low') !== null;
+        factSaveButton.disabled = hasLowStock;
+        factSaveButton.title = hasLowStock ? '@Localizer["Not enough materials or fuel in warehouse."]' : '';
+    }
+
+    function closeAllCascadingDropdowns() {
+        document.querySelectorAll('.cascading-dropdown').forEach(d => d.classList.remove('show'));
+        __activeCascadingDropdown = null;
+        __activeCascadingPosition = null;
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const planForm = document.querySelector('#plan-content form');
+        if (planForm) {
+            planForm.addEventListener('submit', function (e) {
+                if (!validateRequiredWorkLogSelects(planForm)) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                }
+            });
+        }
+
+        document.addEventListener('click', function (e) {
+            const addBtn = e.target.closest('.add-material');
+            if (addBtn) {
+                e.preventDefault();
+                e.stopPropagation();
+                addMaterialRow(addBtn.dataset.rowIndex, addBtn.dataset.category);
+                return;
+            }
+
+            const removeBtn = e.target.closest('.remove-material');
+            if (removeBtn) {
+                e.preventDefault();
+                e.stopPropagation();
+                removeMaterialRow(removeBtn.dataset.rowIndex, removeBtn.dataset.materialIndex);
+                return;
+            }
+        }, true);
+
+        document.addEventListener('input', function (e) {
+            const input = e.target;
+            if (!input) return;
+
+            if (input.classList.contains('rate-input') ||
+                input.classList.contains('total-input') ||
+                input.classList.contains('fuel-rate') ||
+                input.classList.contains('fuel-total') ||
+                input.classList.contains('area-input')) {
+                const rowIndex = input.dataset.rowIndex;
+                if (rowIndex != null) {
+                    requestAnimationFrame(() => updateStockHighlightForRow(rowIndex));
+                }
+            }
+        }, true);
+
+        document.addEventListener('click', function () {
+            closeAllCascadingDropdowns();
+        });
+
+        const factForm = document.querySelector('#fact-content form');
+        if (factForm) {
+            factForm.addEventListener('submit', function (e) {
+                if (!validateRequiredWorkLogSelects(factForm)) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                }
+
+                refreshActiveStockHighlights();
+                const hasLowStock = factForm.querySelector('.stock-low') !== null;
+                const warning = document.getElementById('fact-stock-warning');
+
+                if (hasLowStock) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (warning) {
+                        warning.style.display = 'block';
+                        warning.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                    return false;
+                }
+
+                if (warning) {
+                    warning.style.display = 'none';
+                }
+            });
+        }
+
+        window.addEventListener('scroll', function () {
+            if (__activeCascadingDropdown && __activeCascadingPosition) {
+                __activeCascadingPosition();
+            }
+        }, { passive: true });
+
+        window.addEventListener('resize', function () {
+            if (__activeCascadingDropdown && __activeCascadingPosition) {
+                __activeCascadingPosition();
+            }
+        });
+
+        document.querySelectorAll('.date-range').forEach(initDateRange);
+
+        document.querySelectorAll('.field-select').forEach(sel => {
+            sel.addEventListener('change', function () {
+                const rowIndex = this.dataset.rowIndex;
+                const area = this.selectedOptions[0]?.dataset?.area;
+                const areaInput = document.querySelector(`.area-input[data-row-index="${rowIndex}"]`);
+                if (areaInput && area) {
+                    areaInput.value = area;
+                    recalcRowTotals(rowIndex);
+                }
+            });
+        });
+
+        document.querySelectorAll('.area-input').forEach(inp => {
+            inp.addEventListener('input', function () {
+                recalcRowTotals(this.dataset.rowIndex);
+            });
+        });
+
+        document.querySelectorAll('.rate-input').forEach(inp => {
+            inp.addEventListener('input', function () {
+                const rowIndex = this.dataset.rowIndex;
+                const materialIndex = this.dataset.materialIndex;
+                calcMaterialTotal(rowIndex, materialIndex, false);
+            });
+        });
+
+        document.querySelectorAll('.fuel-rate').forEach(inp => {
+            inp.addEventListener('input', function () {
+                calcFuelTotal(this.dataset.rowIndex, false);
+            });
+        });
+
+        document.querySelectorAll('.worklog-material-select').forEach(initWorklogMaterialSelect);
+        document.querySelectorAll('.worklog-aggregate-select').forEach(initWorklogAggregateSelect);
+
+        document.querySelectorAll('#fact-content .total-input, #fact-content .fuel-total').forEach(inp => {
+            if (inp.dataset.originalTotal == null) {
+                inp.dataset.originalTotal = inp.value || '0';
+            }
+        });
+
+        document.addEventListener('click', function (e) {
+            const addAggregateBtn = e.target.closest('.add-aggregate');
+            if (addAggregateBtn) {
+                e.preventDefault();
+                e.stopPropagation();
+                addAggregateRow(addAggregateBtn.dataset.rowIndex);
+                return;
+            }
+
+            const removeAggregateBtn = e.target.closest('.remove-aggregate');
+            if (removeAggregateBtn) {
+                e.preventDefault();
+                e.stopPropagation();
+                removeAggregateRow(removeAggregateBtn.dataset.rowIndex, removeAggregateBtn.dataset.aggregateIndex);
+            }
+        }, true);
+
+        
+        document.querySelectorAll('.area-input').forEach(inp => recalcRowTotals(inp.dataset.rowIndex));
+
+        
+        document.querySelectorAll('.area-input').forEach(inp => updateStockHighlightForRow(inp.dataset.rowIndex));
+
+        document.querySelectorAll('input[type="number"]').forEach(initNonNegativeNumberInput);
+        document.addEventListener('input', function (e) {
+            if (e.target.matches('input[type="number"]')) {
+                initNonNegativeNumberInput(e.target);
+                if (parseFloat(e.target.value) < 0) {
+                    e.target.value = '';
+                    e.target.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+            }
+        });
+    });
+
+    function initNonNegativeNumberInput(input) {
+        input.min = '0';
+    }
+
+    function isWorkLogRowStarted(row) {
+        const hasVisibleValue = Array.from(row.querySelectorAll('select, input'))
+            .some(el => {
+                if (el.type === 'hidden') return false;
+                return (el.value || '').toString().trim() !== '' && (el.value || '').toString().trim() !== '0';
+            });
+
+        if (hasVisibleValue) return true;
+
+        return Array.from(row.querySelectorAll(
+            '.material-id, .seedtype-id, .aggregate-type-input, .aggregate-equipment-id-input, input[name$=".PlanFrom"], input[name$=".PlanTo"]'
+        ))
+            .some(el => (el.value || '').toString().trim() !== '' && (el.value || '').toString().trim() !== '0');
+    }
+
+    function validateRequiredWorkLogSelects(form) {
+        let isValid = true;
+        form.querySelectorAll('.select-required-missing').forEach(el => el.classList.remove('select-required-missing'));
+
+        form.querySelectorAll('tbody tr, tfoot tr.new-entry-row').forEach(row => {
+            const mustValidate = !row.classList.contains('new-entry-row') || isWorkLogRowStarted(row);
+            if (!mustValidate) return;
+
+            const fieldSelect = row.querySelector('.field-select');
+            if (fieldSelect && !(fieldSelect.value || '').toString().trim()) {
+                fieldSelect.classList.add('select-required-missing');
+                isValid = false;
+            }
+
+            const mechanicSelect = row.querySelector('select[name$=".MechanicId"]');
+            if (mechanicSelect && !(mechanicSelect.value || '').toString().trim()) {
+                mechanicSelect.classList.add('select-required-missing');
+                isValid = false;
+            }
+
+            const dateRange = row.querySelector('.date-range');
+            const planFrom = row.querySelector('input[name$=".PlanFrom"]');
+            const planTo = row.querySelector('input[name$=".PlanTo"]');
+            if ((planFrom || planTo) && (!(planFrom?.value || '').toString().trim() || !(planTo?.value || '').toString().trim())) {
+                dateRange?.classList.add('select-required-missing');
+                isValid = false;
+            }
+
+            const fuelRate = row.querySelector('.fuel-rate');
+            if (fuelRate && !(fuelRate.value || '').toString().trim()) {
+                fuelRate.classList.add('select-required-missing');
+                isValid = false;
+            }
+
+            row.querySelectorAll('.worklog-material-select').forEach(select => {
+                const materialRow = select.closest('.material-row');
+                const category = materialRow?.dataset.category || '';
+                if (category === 'Seeds' || category === 'Pesticides' || category === 'Fertilizers') {
+                    const materialIndex = materialRow?.dataset.materialIndex || select.dataset.materialIndex;
+                    const materialId = materialRow?.querySelector('.material-id')?.value;
+                    const seedTypeId = materialRow?.querySelector('.seedtype-id')?.value;
+                    const hasMaterial = category === 'Seeds'
+                        ? !!seedTypeId && !!materialId
+                        : !!materialId;
+
+                    if (hasMaterial) {
+                        const rateInput = row.querySelector(`.rate-input[data-material-index="${materialIndex}"]`);
+                        const totalInput = row.querySelector(`.total-input[data-material-index="${materialIndex}"]`);
+
+                        if (rateInput && !(rateInput.value || '').toString().trim()) {
+                            rateInput.classList.add('select-required-missing');
+                            isValid = false;
+                        }
+
+                        if (totalInput && !(totalInput.value || '').toString().trim()) {
+                            totalInput.classList.add('select-required-missing');
+                            isValid = false;
+                        }
+                    }
+                    return;
+                }
+                const materialId = materialRow?.querySelector('.material-id')?.value;
+                const seedTypeId = materialRow?.querySelector('.seedtype-id')?.value;
+                const hasValue = category === 'Seeds'
+                    ? !!seedTypeId && !!materialId
+                    : !!materialId;
+
+                if (!hasValue) {
+                    select.classList.add('select-required-missing');
+                    isValid = false;
+                }
+            });
+
+            row.querySelectorAll('.worklog-aggregate-select').forEach(select => {
+                const aggregateRow = select.closest('.aggregate-row');
+                const equipmentType = aggregateRow?.querySelector('.aggregate-type-input')?.value;
+                const equipmentId = aggregateRow?.querySelector('.aggregate-equipment-id-input')?.value;
+
+                if (!equipmentType || !equipmentId) {
+                    select.classList.add('select-required-missing');
+                    isValid = false;
+                }
+            });
+        });
+
+        if (!isValid) {
+            const firstInvalid = form.querySelector('.select-required-missing, select:invalid, input:invalid');
+            firstInvalid?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            firstInvalid?.focus?.();
+        }
+
+        return isValid;
+    }
+
+    function formatLocalDate(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    function initDateRange(input) {
+        const rowIndex = input.dataset.rowIndex;
+        const isFact = input.closest('#fact-content') !== null;
+        const fromInput = document.getElementById(`${isFact ? 'factPlanFrom' : 'planFrom'}_${rowIndex}`);
+        const toInput = document.getElementById(`${isFact ? 'factPlanTo' : 'planTo'}_${rowIndex}`);
+
+        flatpickr(input, {
+            mode: 'range',
+            dateFormat: 'Y-m-d',
+            defaultDate: [fromInput?.value || null, toInput?.value || null],
+            onClose: function (selectedDates) {
+                if (selectedDates.length > 0) {
+                    fromInput.value = formatLocalDate(selectedDates[0]);
+                    toInput.value = formatLocalDate(selectedDates.length > 1 ? selectedDates[1] : selectedDates[0]);
+                } else {
+                    fromInput.value = '';
+                    toInput.value = '';
+                }
+            }
+        });
+    }
+
+    function getArea(rowIndex) {
+        const scope = document.querySelector('.tab-content.active') || document;
+        const areaInput = scope.querySelector(`.area-input[data-row-index="${rowIndex}"]`);
+        return parseFloat(areaInput?.value || '0') || 0;
+    }
+
+    function calcMaterialTotal(rowIndex, materialIndex, preserveManualTotal) {
+        const scope = document.querySelector('.tab-content.active') || document;
+        const rateInput = scope.querySelector(`.rate-input[data-row-index="${rowIndex}"][data-material-index="${materialIndex}"]`);
+        const totalInput = scope.querySelector(`.total-input[data-row-index="${rowIndex}"][data-material-index="${materialIndex}"]`);
+        if (!rateInput || !totalInput) return;
+
+        if (preserveManualTotal && (totalInput.value || '').toString().trim().length > 0) return;
+
+        const area = getArea(rowIndex);
+        const rate = parseFloat(rateInput.value || '0') || 0;
+        const total = area * rate;
+        totalInput.value = total ? total.toFixed(2) : '';
+        requestAnimationFrame(() => updateStockHighlightForRow(rowIndex));
+    }
+
+    function calcFuelTotal(rowIndex, preserveManualTotal) {
+        const scope = document.querySelector('.tab-content.active') || document;
+        const rateInput = scope.querySelector(`.fuel-rate[data-row-index="${rowIndex}"]`);
+        const totalInput = scope.querySelector(`.fuel-total[data-row-index="${rowIndex}"]`);
+        if (!rateInput || !totalInput) return;
+
+        if (preserveManualTotal && (totalInput.value || '').toString().trim().length > 0) return;
+
+        const area = getArea(rowIndex);
+        const rate = parseFloat(rateInput.value || '0') || 0;
+        const total = area * rate;
+        totalInput.value = total ? total.toFixed(2) : '';
+        requestAnimationFrame(() => updateStockHighlightForRow(rowIndex));
+    }
+
+    function recalcRowTotals(rowIndex) {
+        const scope = document.querySelector('.tab-content.active') || document;
+        const totalRows = scope.querySelectorAll(`.total-input[data-row-index="${rowIndex}"]`);
+        totalRows.forEach(inp => {
+            const materialIndex = inp.dataset.materialIndex;
+            calcMaterialTotal(rowIndex, materialIndex, true);
+        });
+        calcFuelTotal(rowIndex, true);
+        requestAnimationFrame(() => updateStockHighlightForRow(rowIndex));
+    }
+
+    function initWorklogMaterialSelect(container) {
+        const rowIndex = container.dataset.rowIndex;
+        const category = container.dataset.category;
+        const placeholder = container.dataset.placeholder || `Select ${category}`;
+
+        const root = document.querySelector('.material-rows-data-container');
+        const data = {
+            'Seeds': { 
+                types: JSON.parse(root.dataset.seedtypes || '[]'), 
+                items: JSON.parse(root.dataset.seeds || '[]') 
+            },
+            'Pesticides': { 
+                types: JSON.parse(root.dataset.pesticidetypes || '[]'), 
+                items: JSON.parse(root.dataset.pesticides || '[]') 
+            },
+            'Fertilizers': { 
+                types: JSON.parse(root.dataset.fertilizertypes || '[]'), 
+                items: JSON.parse(root.dataset.fertilizers || '[]') 
+            }
+        };
+
+        const config = data[category];
+
+        const uniqueItems = (config.items || []).filter((item, idx, arr) => {
+            const nameKey = (item.Name || '').toString().trim().toLowerCase();
+            const typeKey = (item.TypeId ?? '').toString();
+            return idx === arr.findIndex(x =>
+                ((x.Name || '').toString().trim().toLowerCase() === nameKey) &&
+                (((x.TypeId ?? '').toString()) === typeKey));
+        });
+
+        config.items = uniqueItems;
+        let selectedTypeId = parseInt(container.dataset.seedtype) || null;
+        let selectedMaterialId = parseInt(container.dataset.materialid) || null;
+
+        const materialRow = container.closest('.material-row');
+        const typeInput = materialRow.querySelector('.seedtype-id'); 
+        const materialIdInput = materialRow.querySelector('.material-id');
+
+        container.innerHTML = `<span class="display-text">${placeholder}</span><span style="color:#6c757d; font-size: 0.7em; margin-left: 5px;">\u25BC</span>`;
+        const dropdown = document.createElement('div');
+        dropdown.className = 'cascading-dropdown';
+        document.body.appendChild(dropdown);
+
+        dropdown.addEventListener('click', function (e) {
+            e.stopPropagation();
+        });
+
+        function updateDisplay() {
+            let text = placeholder;
+            if (selectedMaterialId) {
+                const item = config.items.find(x => x.Id === selectedMaterialId);
+                if (item) {
+                    if (selectedTypeId) {
+                        const type = config.types.find(x => x.Id === selectedTypeId);
+                        text = type ? `${type.Name}: ${item.Name}` : item.Name;
+                    } else {
+                        text = item.Name;
+                    }
+                }
+            }
+            container.querySelector('.display-text').textContent = text;
+        }
+
+        function showTypes() {
+            dropdown.innerHTML = '';
+            
+            if (config.types && config.types.length > 0) {
+                config.types.forEach(t => {
+                    const div = document.createElement('div');
+                    div.className = 'dropdown-item type-item';
+                    div.textContent = t.Name;
+                    div.onclick = (e) => {
+                        e.stopPropagation();
+                        showItems(t.Id);
+                    };
+                    dropdown.appendChild(div);
+                });
+            } else {
+                
+                if (config.items.length === 0) {
+                    const none = document.createElement('div');
+                    none.className = 'dropdown-item no-items';
+                    none.textContent = 'No materials';
+                    dropdown.appendChild(none);
+                } else {
+                    config.items.forEach(m => {
+                        const div = document.createElement('div');
+                        div.className = 'dropdown-item';
+                        div.textContent = m.Name;
+                        div.onclick = (e) => {
+                            e.stopPropagation();
+                            selectItem(null, m.Id);
+                        };
+                        dropdown.appendChild(div);
+                    });
+                }
+            }
+        }
+
+        function showItems(typeId) {
+            dropdown.innerHTML = '';
+            const back = document.createElement('div');
+            back.className = 'dropdown-item back-item';
+            back.textContent = 'Back';
+            back.onclick = (e) => {
+                e.stopPropagation();
+                showTypes();
+            };
+            dropdown.appendChild(back);
+
+            const filtered = config.items.filter(i => (i.TypeId || 0) === typeId);
+            if (filtered.length === 0) {
+                const none = document.createElement('div');
+                none.className = 'dropdown-item no-items';
+                none.textContent = 'No materials';
+                dropdown.appendChild(none);
+            } else {
+                filtered.forEach(m => {
+                    const div = document.createElement('div');
+                    div.className = 'dropdown-item';
+                    div.textContent = m.Name;
+                    div.onclick = (e) => {
+                        e.stopPropagation();
+                        selectItem(typeId, m.Id);
+                    };
+                    dropdown.appendChild(div);
+                });
+            }
+        }
+
+        function selectItem(typeId, matId) {
+            selectedTypeId = typeId;
+            selectedMaterialId = matId;
+            if (typeInput) typeInput.value = typeId || '';
+            if (materialIdInput) materialIdInput.value = matId || '';
+            container.dataset.seedtype = typeId || '';
+            container.dataset.materialid = matId || '';
+            updateDisplay();
+            dropdown.classList.remove('show');
+            updateStockHighlightForRow(rowIndex);
+        }
+
+        function positionDropdown() {
+            const rect = container.getBoundingClientRect();
+            dropdown.style.top = (rect.bottom) + 'px';
+            dropdown.style.left = rect.left + 'px';
+            dropdown.style.width = rect.width + 'px';
+
+            const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+            const spaceBelow = viewportHeight - rect.bottom;
+            const desiredHeight = 250;
+            if (spaceBelow < 120 && rect.top > 200) {
+                const top = Math.max(8, rect.top - Math.min(desiredHeight, rect.top - 8));
+                dropdown.style.top = top + 'px';
+                dropdown.style.maxHeight = Math.min(desiredHeight, rect.top - 16) + 'px';
+            } else {
+                dropdown.style.maxHeight = Math.min(desiredHeight, spaceBelow - 8) + 'px';
+            }
+        }
+
+        container.onclick = (e) => {
+            e.stopPropagation();
+            const isOpen = dropdown.classList.contains('show');
+
+            closeAllCascadingDropdowns();
+
+            if (!isOpen) {
+                showTypes();
+                dropdown.classList.add('show');
+                positionDropdown();
+
+                __activeCascadingDropdown = dropdown;
+                __activeCascadingPosition = positionDropdown;
+            }
+        };
+
+        updateDisplay();
+    }
+
+    function buildMaterialStockMap(items) {
+        const map = new Map();
+        (items || []).forEach(it => {
+            const nameKey = (it.Name || '').toString().trim().toLowerCase();
+            const typeKey = (it.TypeId ?? '').toString();
+            const key = `${typeKey}||${nameKey}`;
+            const qty = parseFloat(it.Quantity || '0') || 0;
+            map.set(key, (map.get(key) || 0) + qty);
+        });
+        return map;
+    }
+
+    function getMaterialAvailableQty(category, typeId, materialId) {
+        const root = document.querySelector('.material-rows-data-container');
+        if (!root) return null;
+        const src = {
+            Seeds: JSON.parse(root.dataset.seeds || '[]'),
+            Pesticides: JSON.parse(root.dataset.pesticides || '[]'),
+            Fertilizers: JSON.parse(root.dataset.fertilizers || '[]')
+        };
+        const items = src[category] || [];
+        const chosen = items.find(x => (x.Id || x.id) == materialId);
+        if (!chosen) return null;
+        const name = (chosen.Name || chosen.name || '').toString().trim().toLowerCase();
+        const tId = (typeId ?? chosen.TypeId ?? chosen.typeId ?? '').toString();
+        const map = buildMaterialStockMap(items);
+        return map.get(`${tId}||${name}`) ?? 0;
+    }
+
+    function getFuelAvailableQty() {
+        const root = document.querySelector('.material-rows-data-container');
+        if (!root) return null;
+        const fuel = JSON.parse(root.dataset.fuel || '[]');
+        return (fuel || []).reduce((sum, it) => {
+            return sum + (parseFloat(it.Quantity || '0') || 0);
+        }, 0);
+    }
+
+    function setStockClass(input, ok) {
+        if (!input) return;
+        input.classList.remove('stock-ok');
+        input.classList.remove('stock-low');
+        if (ok == null) return;
+        const isFact = input.closest('#fact-content') !== null;
+        if (isFact && ok) return;
+        input.classList.add(ok ? 'stock-ok' : 'stock-low');
+    }
+
+    function updateStockHighlightForRow(rowIndex) {
+        const scope = document.querySelector('.tab-content.active') || document;
+        
+        const materialRows = scope.querySelectorAll(`.material-rows[data-row-index="${rowIndex}"] .material-row`);
+        materialRows.forEach(row => {
+            const catInput = row.querySelector('input.material-category');
+            const category = (catInput?.value || row.dataset.category || '').toString();
+            if (!category) return;
+
+            const typeId = parseInt(row.querySelector('input.seedtype-id')?.value || '') || null;
+            const materialId = parseInt(row.querySelector('input.material-id')?.value || '') || null;
+            const idx = row.dataset.materialIndex;
+            const totalInput = scope.querySelector(`.total-input[data-row-index="${rowIndex}"][data-material-index="${idx}"]`);
+
+            if (!materialId || !totalInput) {
+                setStockClass(totalInput, null);
+                return;
+            }
+
+            const required = parseFloat(totalInput.value || '0') || 0;
+            const originalTotal = parseFloat(totalInput.dataset.originalTotal || '0') || 0;
+            const available = (getMaterialAvailableQty(category, typeId, materialId) ?? 0) + originalTotal;
+            if (available == null || required === 0) {
+                setStockClass(totalInput, null);
+                return;
+            }
+            setStockClass(totalInput, required <= available);
+        });
+
+        
+        const fuelTotal = scope.querySelector(`.fuel-total[data-row-index="${rowIndex}"]`);
+        if (fuelTotal) {
+            const requiredFuel = parseFloat(fuelTotal.value || '0') || 0;
+            const originalFuelTotal = parseFloat(fuelTotal.dataset.originalTotal || '0') || 0;
+            const availableFuel = (getFuelAvailableQty() ?? 0) + originalFuelTotal;
+            if (availableFuel == null || requiredFuel === 0) {
+                setStockClass(fuelTotal, null);
+            } else {
+                setStockClass(fuelTotal, requiredFuel <= availableFuel);
+            }
+        }
+    }
+
+    function addMaterialRow(rowIndex, category) {
+        const scope = document.querySelector('.tab-content.active') || document;
+        const materialRows = scope.querySelector(`.material-rows[data-row-index="${rowIndex}"]`);
+        const rateRows = scope.querySelector(`.rate-rows[data-row-index="${rowIndex}"]`);
+        const totalRows = scope.querySelector(`.total-rows[data-row-index="${rowIndex}"]`);
+        if (!materialRows || !rateRows || !totalRows) return;
+
+        const allMaterial = Array.from(materialRows.querySelectorAll('.material-row'));
+        const newIndex = allMaterial.length;
+
+        const lastOfCategory = Array.from(materialRows.querySelectorAll(`.material-row[data-category="${category}"]`)).pop();
+        const insertAfter = lastOfCategory || allMaterial[allMaterial.length - 1];
+
+        const newMaterialRow = document.createElement('div');
+        newMaterialRow.className = 'material-row mb-1';
+        newMaterialRow.dataset.materialIndex = newIndex;
+        newMaterialRow.dataset.category = category;
+        newMaterialRow.innerHTML = `
+            <div class="input-group input-group-sm">
+                <input type="hidden" value="0" class="row-id" />
+                <input type="hidden" value="${category}" class="material-category" />
+                <input type="hidden" value="" class="seedtype-id" />
+                <input type="hidden" value="" class="material-id" />
+                <div class="cascading-select form-control form-control-sm worklog-material-select"
+                     data-row-index="${rowIndex}" data-material-index="${newIndex}"
+                     data-category="${category}" data-seedtype="" data-materialid=""
+                     data-placeholder="Select ${category}"></div>
+                <div class="input-group-append d-flex">
+                    <button type="button" class="btn btn-outline-primary btn-sm add-material" data-row-index="${rowIndex}" data-category="${category}">+</button>
+                    <button type="button" class="btn btn-outline-danger btn-sm remove-material" data-row-index="${rowIndex}" data-material-index="${newIndex}">&times;</button>
+                </div>
+            </div>
+        `;
+
+        insertAfter.after(newMaterialRow);
+
+        const materialIndexInDom = Array.from(materialRows.querySelectorAll('.material-row')).indexOf(newMaterialRow);
+
+        const newRateRow = document.createElement('div');
+        newRateRow.className = 'rate-row mb-1';
+        newRateRow.innerHTML = `<input type="number" step="0.01" class="form-control form-control-sm rate-input" data-row-index="${rowIndex}" data-material-index="${newIndex}" />`;
+
+        const rateRowEls = Array.from(rateRows.querySelectorAll('.rate-row'));
+        if (materialIndexInDom >= 0 && materialIndexInDom < rateRowEls.length) {
+            rateRows.insertBefore(newRateRow, rateRowEls[materialIndexInDom]);
+        } else {
+            rateRows.appendChild(newRateRow);
+        }
+
+        const newTotalRow = document.createElement('div');
+        newTotalRow.className = 'total-row mb-1';
+        newTotalRow.innerHTML = `<input type="number" step="0.01" class="form-control form-control-sm total-input" data-row-index="${rowIndex}" data-material-index="${newIndex}" />`;
+
+        const totalRowEls = Array.from(totalRows.querySelectorAll('.total-row'));
+        if (materialIndexInDom >= 0 && materialIndexInDom < totalRowEls.length) {
+            totalRows.insertBefore(newTotalRow, totalRowEls[materialIndexInDom]);
+        } else {
+            totalRows.appendChild(newTotalRow);
+        }
+
+        initWorklogMaterialSelect(newMaterialRow.querySelector('.worklog-material-select'));
+        newRateRow.querySelector('.rate-input').addEventListener('input', function () {
+            calcMaterialTotal(rowIndex, this.dataset.materialIndex, false);
+        });
+
+        newMaterialRow.querySelector('.add-material').addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            addMaterialRow(rowIndex, category);
+        });
+        newMaterialRow.querySelector('.remove-material').addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            removeMaterialRow(rowIndex, this.dataset.materialIndex);
+        });
+
+        reindexMaterialRows(rowIndex);
+        updateStockHighlightForRow(rowIndex);
+    }
+
+    function removeMaterialRow(rowIndex, materialIndex) {
+        const scope = document.querySelector('.tab-content.active') || document;
+        const materialRows = scope.querySelector(`.material-rows[data-row-index="${rowIndex}"]`);
+        const rateRows = scope.querySelector(`.rate-rows[data-row-index="${rowIndex}"]`);
+        const totalRows = scope.querySelector(`.total-rows[data-row-index="${rowIndex}"]`);
+        if (!materialRows || !rateRows || !totalRows) return;
+
+        const mEls = Array.from(materialRows.querySelectorAll('.material-row'));
+        const idx = parseInt(materialIndex);
+        const target = mEls[idx];
+        if (!target) return;
+
+        const category = target.dataset.category;
+        if (category === 'Seeds') return;
+
+        const sameCatCount = materialRows.querySelectorAll(`.material-row[data-category="${category}"]`).length;
+        if (sameCatCount <= 1) {
+            const rowId = target.querySelector('input[name*="MaterialRowIds_List"], input.row-id');
+            const cat = target.querySelector('input.material-category');
+            const typeId = target.querySelector('input.seedtype-id');
+            const matId = target.querySelector('input.material-id');
+            const sel = target.querySelector('.worklog-material-select');
+            const rateInput = rateRows.querySelectorAll('.rate-row')[idx]?.querySelector('.rate-input');
+            const totalInput = totalRows.querySelectorAll('.total-row')[idx]?.querySelector('.total-input');
+
+            if (rowId) rowId.value = '0';
+            if (cat) cat.value = '';
+            if (typeId) typeId.value = '';
+            if (matId) matId.value = '';
+            if (rateInput) rateInput.value = '';
+            if (totalInput) totalInput.value = '';
+
+            if (sel) {
+                const placeholder = sel.dataset.placeholder || `Select ${category}`;
+                const newSel = document.createElement('div');
+                newSel.className = sel.className;
+                newSel.dataset.rowIndex = sel.dataset.rowIndex;
+                newSel.dataset.materialIndex = sel.dataset.materialIndex;
+                newSel.dataset.category = sel.dataset.category;
+                newSel.dataset.seedtype = '';
+                newSel.dataset.materialid = '';
+                newSel.dataset.placeholder = placeholder;
+                sel.replaceWith(newSel);
+                initWorklogMaterialSelect(newSel);
+            }
+            updateStockHighlightForRow(rowIndex);
+            return;
+        }
+
+        target.remove();
+
+        const rEls = Array.from(rateRows.querySelectorAll('.rate-row'));
+        const tEls = Array.from(totalRows.querySelectorAll('.total-row'));
+        rEls[idx]?.remove();
+        tEls[idx]?.remove();
+
+        reindexMaterialRows(rowIndex);
+        updateStockHighlightForRow(rowIndex);
+    }
+
+    function reindexMaterialRows(rowIndex) {
+        const scope = document.querySelector('.tab-content.active') || document;
+        const prefix = scope.id === 'fact-content' ? 'factModels' : 'models';
+        const materialRows = scope.querySelector(`.material-rows[data-row-index="${rowIndex}"]`);
+        const rateRows = scope.querySelector(`.rate-rows[data-row-index="${rowIndex}"]`);
+        const totalRows = scope.querySelector(`.total-rows[data-row-index="${rowIndex}"]`);
+        if (!materialRows || !rateRows || !totalRows) return;
+
+        const mEls = Array.from(materialRows.querySelectorAll('.material-row'));
+        const rEls = Array.from(rateRows.querySelectorAll('.rate-row'));
+        const tEls = Array.from(totalRows.querySelectorAll('.total-row'));
+
+        mEls.forEach((row, index) => {
+            row.dataset.materialIndex = index;
+            const rowId = row.querySelector('input[name*="MaterialRowIds_List"], input.row-id');
+            const cat = row.querySelector('input.material-category');
+            const typeId = row.querySelector('input.seedtype-id');
+            const matId = row.querySelector('input.material-id');
+
+            if (rowId) rowId.name = `${prefix}[${rowIndex}].MaterialRowIds_List[${index}]`;
+            if (cat) cat.name = `${prefix}[${rowIndex}].MaterialCategories_List[${index}]`;
+            if (typeId) typeId.name = `${prefix}[${rowIndex}].SeedTypeIds_List[${index}]`;
+            if (matId) matId.name = `${prefix}[${rowIndex}].MaterialIds_List[${index}]`;
+
+            const select = row.querySelector('.worklog-material-select');
+            if (select) select.dataset.materialIndex = index;
+
+            const removeBtn = row.querySelector('.remove-material');
+            if (removeBtn) removeBtn.dataset.materialIndex = index;
+        });
+
+        rEls.forEach((row, index) => {
+            row.dataset.materialIndex = index;
+            const inp = row.querySelector('.rate-input');
+            if (inp) {
+                inp.name = `${prefix}[${rowIndex}].Rates_List[${index}]`;
+                inp.dataset.materialIndex = index;
+            }
+        });
+
+        tEls.forEach((row, index) => {
+            row.dataset.materialIndex = index;
+            const inp = row.querySelector('.total-input');
+            if (inp) {
+                inp.name = `${prefix}[${rowIndex}].Totals_List[${index}]`;
+                inp.dataset.materialIndex = index;
+            }
+        });
+    }
+
+    function initWorklogAggregateSelect(container) {
+        const rowIndex = container.dataset.rowIndex;
+        const aggregateIndex = container.dataset.aggregateIndex;
+        const placeholder = container.dataset.placeholder || 'Select equipment';
+
+        const root = document.querySelector('.aggregate-rows[data-row-index="' + rowIndex + '"]');
+        const equipments = JSON.parse(root.dataset.equipments || '[]');
+
+        const types = [
+            { id: 1, name: 'Tractor' },
+            { id: 2, name: 'Combine' },
+            { id: 3, name: 'Implement' }
+        ];
+
+        let selectedType = parseInt(container.dataset.equipmenttype) || null;
+        let selectedId = parseInt(container.dataset.equipmentid) || null;
+
+        const row = container.closest('.aggregate-row');
+        const typeInput = row.querySelector('.aggregate-type-input');
+        const idInput = row.querySelector('.aggregate-equipment-id-input');
+
+        container.innerHTML = `<span class="display-text">${placeholder}</span><span style="color:#6c757d; font-size: 0.7em; margin-left: 5px;">\u25BC</span>`;
+        const dropdown = document.createElement('div');
+        dropdown.className = 'cascading-dropdown';
+        document.body.appendChild(dropdown);
+
+        dropdown.addEventListener('click', function (e) {
+            e.stopPropagation();
+        });
+
+        function updateDisplay() {
+            let text = placeholder;
+            if (selectedId) {
+                const eq = equipments.find(e => e.Id === selectedId);
+                text = eq ? eq.Name : placeholder;
+            }
+            container.querySelector('.display-text').textContent = text;
+        }
+
+        function showTypes() {
+            dropdown.innerHTML = '';
+            types.forEach(t => {
+                const div = document.createElement('div');
+                div.className = 'dropdown-item type-item';
+                div.textContent = t.name;
+                div.onclick = (e) => {
+                    e.stopPropagation();
+                    showEquipments(t.id);
+                };
+                dropdown.appendChild(div);
+            });
+        }
+
+        function showEquipments(typeId) {
+            dropdown.innerHTML = '';
+            const back = document.createElement('div');
+            back.className = 'dropdown-item back-item';
+            back.textContent = 'Back';
+            back.onclick = (e) => {
+                e.stopPropagation();
+                showTypes();
+            };
+            dropdown.appendChild(back);
+
+            const filtered = equipments.filter(e => (e.Type || 0) === typeId);
+            if (filtered.length === 0) {
+                const none = document.createElement('div');
+                none.className = 'dropdown-item no-items';
+                none.textContent = 'No equipment';
+                dropdown.appendChild(none);
+            } else {
+                filtered.forEach(eq => {
+                    const div = document.createElement('div');
+                    div.className = 'dropdown-item';
+                    div.textContent = eq.Name;
+                    div.onclick = (e) => {
+                        e.stopPropagation();
+                        selectItem(typeId, eq.Id);
+                    };
+                    dropdown.appendChild(div);
+                });
+            }
+        }
+
+        function selectItem(typeId, eqId) {
+            selectedType = typeId;
+            selectedId = eqId;
+            if (typeInput) typeInput.value = typeId || '';
+            if (idInput) idInput.value = eqId || '';
+            container.dataset.equipmenttype = typeId || '';
+            container.dataset.equipmentid = eqId || '';
+            updateDisplay();
+            dropdown.classList.remove('show');
+        }
+
+        function positionDropdown() {
+            const rect = container.getBoundingClientRect();
+            dropdown.style.top = (rect.bottom) + 'px';
+            dropdown.style.left = rect.left + 'px';
+            dropdown.style.width = rect.width + 'px';
+
+            const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+            const spaceBelow = viewportHeight - rect.bottom;
+            const desiredHeight = 250;
+            if (spaceBelow < 120 && rect.top > 200) {
+                const top = Math.max(8, rect.top - Math.min(desiredHeight, rect.top - 8));
+                dropdown.style.top = top + 'px';
+                dropdown.style.maxHeight = Math.min(desiredHeight, rect.top - 16) + 'px';
+            } else {
+                dropdown.style.maxHeight = Math.min(desiredHeight, spaceBelow - 8) + 'px';
+            }
+        }
+
+        container.onclick = (e) => {
+            e.stopPropagation();
+            const isOpen = dropdown.classList.contains('show');
+
+            closeAllCascadingDropdowns();
+
+            if (!isOpen) {
+                dropdown.classList.add('show');
+                showTypes();
+                positionDropdown();
+
+                __activeCascadingDropdown = dropdown;
+                __activeCascadingPosition = positionDropdown;
+            }
+        };
+
+        updateDisplay();
+    }
+
+    
+    function addAggregateRow(rowIndex) {
+        const scope = document.querySelector('.tab-content.active') || document;
+        const prefix = scope.id === 'fact-content' ? 'factModels' : 'models';
+        const rows = scope.querySelector(`.aggregate-rows[data-row-index="${rowIndex}"]`);
+        if (!rows) return;
+        const currentCount = rows.querySelectorAll('.aggregate-row').length;
+        const newIndex = currentCount;
+
+        const newRow = document.createElement('div');
+        newRow.className = 'aggregate-row mb-1';
+        newRow.dataset.aggregateIndex = newIndex;
+        newRow.innerHTML = `
+            <div class="input-group input-group-sm">
+                <input type="hidden" name="${prefix}[${rowIndex}].AggregateRowIds_List[${newIndex}]" value="0" />
+
+                <input type="hidden" name="${prefix}[${rowIndex}].AggregateEquipmentTypes_List[${newIndex}]" value="" class="aggregate-type-input" />
+                <input type="hidden" name="${prefix}[${rowIndex}].AggregateEquipmentIds_List[${newIndex}]" value="" class="aggregate-equipment-id-input" />
+
+                <div class="cascading-select form-control form-control-sm worklog-aggregate-select"
+                     data-row-index="${rowIndex}"
+                     data-aggregate-index="${newIndex}"
+                     data-equipmenttype=""
+                     data-equipmentid=""
+                     data-placeholder="Select equipment"></div>
+
+                <div class="input-group-append d-flex">
+                    <button type="button" class="btn btn-outline-primary btn-sm add-aggregate" data-row-index="${rowIndex}">+</button>
+                    <button type="button" class="btn btn-outline-danger btn-sm remove-aggregate" data-row-index="${rowIndex}" data-aggregate-index="${newIndex}">&times;</button>
+                </div>
+            </div>
+        `;
+
+        rows.appendChild(newRow);
+
+        initWorklogAggregateSelect(newRow.querySelector('.worklog-aggregate-select'));
+    }
+
+    function removeAggregateRow(rowIndex, aggregateIndex) {
+        const scope = document.querySelector('.tab-content.active') || document;
+        const rows = scope.querySelector(`.aggregate-rows[data-row-index="${rowIndex}"]`);
+        if (!rows) return;
+        const els = rows.querySelectorAll('.aggregate-row');
+        if (els.length <= 1) return;
+
+        els[aggregateIndex]?.remove();
+        reindexAggregateRows(rowIndex);
+    }
+
+    function reindexAggregateRows(rowIndex) {
+        const scope = document.querySelector('.tab-content.active') || document;
+        const prefix = scope.id === 'fact-content' ? 'factModels' : 'models';
+        const rows = scope.querySelector(`.aggregate-rows[data-row-index="${rowIndex}"]`);
+        if (!rows) return;
+        rows.querySelectorAll('.aggregate-row').forEach((row, index) => {
+            row.dataset.aggregateIndex = index;
+
+            const rowId = row.querySelector('input[name*="AggregateRowIds_List"]');
+            const typeInput = row.querySelector('.aggregate-type-input');
+            const eqInput = row.querySelector('.aggregate-equipment-id-input');
+            const select = row.querySelector('.worklog-aggregate-select');
+            const removeBtn = row.querySelector('.remove-aggregate');
+
+            if (rowId) rowId.name = `${prefix}[${rowIndex}].AggregateRowIds_List[${index}]`;
+            if (typeInput) typeInput.name = `${prefix}[${rowIndex}].AggregateEquipmentTypes_List[${index}]`;
+            if (eqInput) eqInput.name = `${prefix}[${rowIndex}].AggregateEquipmentIds_List[${index}]`;
+            if (select) select.dataset.aggregateIndex = index;
+            if (removeBtn) {
+                removeBtn.dataset.aggregateIndex = index;
+            }
+        });
+    }
+</script>

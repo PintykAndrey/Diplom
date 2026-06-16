@@ -1,0 +1,256 @@
+@model List<Diplom.Models.Fields.FieldSituationLogModel>
+@inject Microsoft.AspNetCore.Mvc.Localization.IViewLocalizer Localizer
+
+@{
+    ViewData["Title"] = @Localizer["Field Situation Log"].Value;
+    int newIndex = Model?.Count ?? 0;
+}
+
+<link href="~/css/fields.css" rel="stylesheet" />
+
+<div class="container-fluid mt-4">
+    <h2 class="mb-3 text-center">@Localizer["Field Situation Log"]</h2>
+
+    <form asp-action="SaveSituationLog" asp-controller="FieldSituation" method="post" enctype="multipart/form-data">
+        <input type="hidden" name="culture" value="@System.Globalization.CultureInfo.CurrentUICulture.Name" />
+
+        <table class="table table-bordered table-sm text-center align-middle"
+            style="min-width: 1200px; table-layout: fixed;">
+
+            <thead class="table-light">
+                <tr>
+                    <th>#</th>
+                    <th>@Localizer["Field"]</th>
+                    <th>@Localizer["Date"]</th>
+                    <th>@Localizer["Description"]</th>
+                    <th>@Localizer["Photos"]</th>
+                    <th>@Localizer["Recommendations"]</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    @for (int i = 0; i < Model.Count; i++)
+                    {
+                        var log = Model[i];
+
+                        <tr>
+                            <td>@(i + 1)</td>
+                            <input type="hidden" name="models[@i].Id" value="@log.Id" />
+
+                            <td>
+                                <select name="models[@i].FieldId" class="form-control form-control-sm">
+                                    <option value="">@Localizer["Select Field"]</option>
+                                    @foreach (var f in ViewBag.Fields)
+                                    {
+                                        <option value="@f.Id" selected="@(f.Id == log.FieldId)">
+                                            @f.Name
+                                        </option>
+                                    }
+                                </select>
+                            </td>
+
+                            <td>
+                                <input type="date" name="models[@i].Date" value="@(log.Date?.ToString("yyyy-MM-dd") ?? "")"
+                                    class="form-control form-control-sm" />
+                            </td>
+
+                            <td>
+                                <textarea name="models[@i].Description"
+                                    class="form-control form-control-sm">@log.Description</textarea>
+                            </td>
+
+                            <td>
+                                <div class="photo-section" data-index="@i">
+                                    <div class="existing-photos">
+                                        @if (log.PhotoPaths != null)
+                                        {
+                                            foreach (var photo in log.PhotoPaths)
+                                            {
+                                                <div class="photo-item existing-photo" data-photo-path="@photo">
+                                                    <img src="@photo" class="photo-thumbnail" />
+                                                    <button type="button" class="btn-remove-photo">✖</button>
+                                                </div>
+                                            }
+                                        }
+                                    </div>
+                                    <div class="new-photos-preview"></div>
+
+                                    <input type="file" name="models[@i].PhotoUploads" multiple class="photo-input" />
+
+                                    <button type="button" class="btn-add-photo btn btn-outline-primary btn-sm w-100">
+                                        @Localizer["Add Photos"]
+                                    </button>
+
+                                    <div class="photo-paths-hidden"></div>
+                                    <div class="photos-to-delete-hidden"></div>
+                                </div>
+                            </td>
+
+                            <td>
+                                <textarea name="models[@i].Recommendations"
+                                    class="form-control form-control-sm">@log.Recommendations</textarea>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+
+            <tfoot>
+                <tr>
+                    <td>+</td>
+                    <input type="hidden" name="models[@newIndex].Id" value="0" />
+
+                    <td>
+                        <select name="models[@newIndex].FieldId" class="form-control form-control-sm">
+                            <option value="">@Localizer["Select Field"]</option>
+                            @foreach (var f in ViewBag.Fields)
+                            {
+                                <option value="@f.Id">@f.Name</option>
+                            }
+                        </select>
+                    </td>
+
+                    <td>
+                        <input type="date" name="models[@newIndex].Date" value="@DateTime.Now.ToString("yyyy-MM-dd")"
+                            class="form-control form-control-sm" />
+                    </td>
+
+                    <td>
+                        <textarea name="models[@newIndex].Description" class="form-control form-control-sm"></textarea>
+                    </td>
+
+                    <td>
+                        <div class="photo-section" data-index="@newIndex">
+
+                            <div class="new-photos-preview"></div>
+
+                            <input type="file" name="models[@newIndex].PhotoUploads" multiple class="photo-input" />
+
+                            <button type="button" class="btn-add-photo btn btn-outline-primary btn-sm w-100">
+                                @Localizer["Add Photos"]
+                            </button>
+
+                            <div class="photo-paths-hidden"></div>
+                            <div class="photos-to-delete-hidden"></div>
+                        </div>
+                    </td>
+
+                    <td>
+                        <textarea name="models[@newIndex].Recommendations"
+                            class="form-control form-control-sm"></textarea>
+                    </td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <div class="mt-3 text-end">
+            <button type="submit" class="btn btn-primary">
+                @Localizer["Save"]
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+    document.querySelectorAll('.photo-section').forEach(section => {
+        initializePhotoSection(section);
+    });
+
+    function initializePhotoSection(section) {
+        const index = section.dataset.index;
+        const photoInput = section.querySelector('.photo-input');
+        const addPhotoBtn = section.querySelector('.btn-add-photo');
+        const newPhotosPreview = section.querySelector('.new-photos-preview');
+        const photoPathsHidden = section.querySelector('.photo-paths-hidden');
+        const photosToDeleteHidden = section.querySelector('.photos-to-delete-hidden');
+        const selectedFiles = new DataTransfer();
+
+        addPhotoBtn.addEventListener('click', () => photoInput.click());
+
+        photoInput.addEventListener('change', function (e) {
+            Array.from(e.target.files).forEach(file => {
+                if (file.type.startsWith('image/')) {
+                    selectedFiles.items.add(file);
+                    const reader = new FileReader();
+                    reader.onload = function (ev) {
+                        const div = document.createElement('div');
+                        div.className = 'photo-item new-photo';
+                        div.dataset.fileIndex = selectedFiles.files.length - 1;
+                        div.innerHTML = `
+                            <img src="${ev.target.result}" class="photo-thumbnail"/>
+                            <button type="button" class="btn-remove-photo">✖</button>
+                        `;
+                        newPhotosPreview.appendChild(div);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+            photoInput.files = selectedFiles.files;
+        });
+
+        section.addEventListener('click', function (e) {
+            if (e.target.classList.contains('btn-remove-photo')) {
+
+                const item = e.target.closest('.photo-item');
+                const isExisting = item.classList.contains('existing-photo');
+
+                if (isExisting) {
+                    const path = item.dataset.photoPath;
+
+                    item.remove();
+
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = `models[${index}].PhotosToDelete`;
+                    input.value = path;
+                    photosToDeleteHidden.appendChild(input);
+                } else {
+                    const fileIndex = parseInt(item.dataset.fileIndex);
+                    if (!isNaN(fileIndex)) {
+                        const updatedFiles = new DataTransfer();
+                        Array.from(selectedFiles.files).forEach((file, index) => {
+                            if (index !== fileIndex) {
+                                updatedFiles.items.add(file);
+                            }
+                        });
+                        selectedFiles.items.clear();
+                        Array.from(updatedFiles.files).forEach(file => selectedFiles.items.add(file));
+                        photoInput.files = selectedFiles.files;
+                    }
+                    item.remove();
+                    Array.from(newPhotosPreview.querySelectorAll('.new-photo')).forEach((photo, index) => {
+                        photo.dataset.fileIndex = index;
+                    });
+                }
+
+                updateHiddenInputs(section, index);
+            }
+        });
+
+        updateHiddenInputs(section, index);
+    }
+
+    function updateHiddenInputs(section, index) {
+        const container = section.querySelector('.photo-paths-hidden');
+        const existing = section.querySelectorAll('.existing-photo');
+
+        container.innerHTML = '';
+
+        existing.forEach(photo => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = `models[${index}].PhotoPaths`;
+            input.value = photo.dataset.photoPath;
+            container.appendChild(input);
+        });
+    }
+
+    document.querySelector('form').addEventListener('submit', function () {
+        document.querySelectorAll('.photo-section').forEach(section => {
+            const index = section.dataset.index;
+            updateHiddenInputs(section, index);
+        });
+    });
+</script>
