@@ -29,7 +29,7 @@ namespace Diplom.Controllers.Fields
 
             if (file == null || file.Length == 0)
             {
-                ModelState.AddModelError("", "Выберите KML файл.");
+                ModelState.AddModelError("", "Select the KML file.");
                 return View("~/Views/Fields/UploadKml.cshtml", model);
             }
 

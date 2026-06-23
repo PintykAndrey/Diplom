@@ -183,7 +183,7 @@ namespace Diplom.Controllers.Tools
             }
             catch (Exception ex)
             {
-                return StatusCode(500, "Ошибка при восстановлении поля: " + ex.Message);
+                return StatusCode(500, ex.Message);
             }
         }
 
@@ -214,7 +214,7 @@ namespace Diplom.Controllers.Tools
             }
             catch (Exception ex)
             {
-                return StatusCode(500, "Ошибка при удалении поля: " + ex.Message);
+                return StatusCode(500, ex.Message);
             }
         }
 
